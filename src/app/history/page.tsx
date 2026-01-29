@@ -11,10 +11,21 @@ import { HistoryTable, StatsPanel } from '@/components';
 import { usePredictions } from '@/hooks/usePredictions';
 
 export default function HistoryPage() {
-  const { predictions, stats, remove, refresh } = usePredictions();
+  const { predictions, stats, remove, edit, refresh } = usePredictions();
 
   const handleDelete = (id: string) => {
     remove(id);
+    refresh();
+  };
+
+  const handleEdit = (
+    id: string,
+    updates: {
+      nikkei?: { predictedChange?: number; actualChange?: number | null };
+      sp500?: { predictedChange?: number; actualChange?: number | null };
+    }
+  ) => {
+    edit(id, updates);
     refresh();
   };
 
@@ -51,7 +62,7 @@ export default function HistoryPage() {
           <StatsPanel stats={stats} />
 
           {/* 履歴テーブル */}
-          <HistoryTable predictions={predictions} onDelete={handleDelete} />
+          <HistoryTable predictions={predictions} onDelete={handleDelete} onEdit={handleEdit} />
         </div>
       </main>
 

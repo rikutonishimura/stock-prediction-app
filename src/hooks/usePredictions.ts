@@ -16,6 +16,7 @@ import {
   updatePredictionResult,
   deletePrediction,
   getPendingPredictions,
+  editPrediction,
 } from '@/lib/storage';
 import { calculateStockStats } from '@/lib/stats';
 import { canAutoConfirm } from '@/lib/marketHours';
@@ -51,6 +52,14 @@ interface UsePredictionsReturn {
       sp500?: { actualChange: number };
     }
   ) => PredictionRecord | null;
+  /** 予想を編集 */
+  edit: (
+    id: string,
+    updates: {
+      nikkei?: { predictedChange?: number; actualChange?: number | null };
+      sp500?: { predictedChange?: number; actualChange?: number | null };
+    }
+  ) => PredictionRecord | null;
   /** 予想を削除 */
   remove: (id: string) => boolean;
   /** データを再読み込み */
@@ -64,6 +73,8 @@ interface UsePredictionsReturn {
 export function usePredictions(options: UsePredictionsOptions = {}): UsePredictionsReturn {
   const { stockData } = options;
   const [predictions, setPredictions] = useState<PredictionRecord[]>([]);
+  const [todayPrediction, setTodayPrediction] = useState<PredictionRecord | null>(null);
+  const [pendingPredictions, setPendingPredictions] = useState<PredictionRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const autoConfirmProcessedRef = useRef<Set<string>>(new Set());
 
@@ -71,6 +82,8 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
     setLoading(true);
     const data = getAllPredictions();
     setPredictions(data);
+    setTodayPrediction(getTodayPrediction());
+    setPendingPredictions(getPendingPredictions());
     setLoading(false);
   }, []);
 
@@ -105,6 +118,8 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
           setPredictions((prev) =>
             prev.map((p) => (p.id === record.id ? updated : p))
           );
+          setTodayPrediction(getTodayPrediction());
+          setPendingPredictions(getPendingPredictions());
           console.log(`[自動確定] ${record.date} の予想を自動確定しました`);
         }
       }
@@ -114,6 +129,8 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
   const add = useCallback((input: PredictionInput): PredictionRecord => {
     const newRecord = addPrediction(input);
     setPredictions(prev => [...prev, newRecord]);
+    setTodayPrediction(newRecord);
+    setPendingPredictions(getPendingPredictions());
     return newRecord;
   }, []);
 
@@ -130,6 +147,8 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
         setPredictions(prev =>
           prev.map(p => (p.id === id ? updated : p))
         );
+        setTodayPrediction(getTodayPrediction());
+        setPendingPredictions(getPendingPredictions());
       }
       return updated;
     },
@@ -140,14 +159,34 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
     const success = deletePrediction(id);
     if (success) {
       setPredictions(prev => prev.filter(p => p.id !== id));
+      setTodayPrediction(getTodayPrediction());
+      setPendingPredictions(getPendingPredictions());
     }
     return success;
   }, []);
 
-  // 派生データ
-  const todayPrediction = getTodayPrediction();
-  const pendingPredictions = getPendingPredictions();
+  const edit = useCallback(
+    (
+      id: string,
+      updates: {
+        nikkei?: { predictedChange?: number; actualChange?: number | null };
+        sp500?: { predictedChange?: number; actualChange?: number | null };
+      }
+    ): PredictionRecord | null => {
+      const updated = editPrediction(id, updates);
+      if (updated) {
+        setPredictions(prev =>
+          prev.map(p => (p.id === id ? updated : p))
+        );
+        setTodayPrediction(getTodayPrediction());
+        setPendingPredictions(getPendingPredictions());
+      }
+      return updated;
+    },
+    []
+  );
 
+  // 統計データ
   const stats: OverallStats = {
     nikkei: calculateStockStats(predictions, 'nikkei'),
     sp500: calculateStockStats(predictions, 'sp500'),
@@ -161,6 +200,7 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
     loading,
     add,
     updateResult,
+    edit,
     remove,
     refresh: loadData,
   };

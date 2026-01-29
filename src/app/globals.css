@@ -47,3 +47,67 @@ body {
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background-color: #9ca3af;
 }
+
+/* 株価ティッカー */
+.ticker-wrapper {
+  width: 100%;
+  overflow: hidden;
+  padding: 10px 0;
+}
+
+.ticker-content {
+  display: flex;
+  animation: ticker-scroll 40s linear infinite;
+  width: fit-content;
+}
+
+.ticker-content:hover {
+  animation-play-state: paused;
+}
+
+.ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 24px;
+  white-space: nowrap;
+  border-right: 1px solid #374151;
+}
+
+.ticker-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.ticker-price {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.ticker-change {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.ticker-change.positive {
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.15);
+}
+
+.ticker-change.negative {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}

@@ -8,7 +8,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { PredictionForm, ResultCard, StatsPanel, NewsList } from '@/components';
+import { PredictionForm, ResultCard, StatsPanel, NewsList, StockTicker, StockChart } from '@/components';
 import { useStock } from '@/hooks/useStock';
 import { usePredictions } from '@/hooks/usePredictions';
 import { useNews } from '@/hooks/useNews';
@@ -16,7 +16,7 @@ import type { PredictionInput } from '@/types';
 
 export default function Home() {
   const { data: stockData, loading: stockLoading, error: stockError, refetch } = useStock();
-  const { predictions, todayPrediction, stats, add, updateResult, refresh } = usePredictions({ stockData });
+  const { predictions, todayPrediction, stats, add, updateResult, edit, refresh } = usePredictions({ stockData });
   const [activeTab, setActiveTab] = useState<'predict' | 'stats'>('predict');
   const { items: japanNews, loading: japanNewsLoading, error: japanNewsError, refetch: refetchJapanNews } = useNews('japan');
   const { items: usNews, loading: usNewsLoading, error: usNewsError, refetch: refetchUsNews } = useNews('us');
@@ -37,8 +37,19 @@ export default function Home() {
     refresh();
   };
 
+  const handleEdit = (
+    id: string,
+    updates: {
+      nikkei?: { predictedChange?: number; actualChange?: number | null };
+      sp500?: { predictedChange?: number; actualChange?: number | null };
+    }
+  ) => {
+    edit(id, updates);
+    refresh();
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gradient-to-b from-slate-100 via-blue-50 to-slate-100">
       {/* ヘッダー */}
       <header className="bg-white shadow-sm">
         <div className="w-full px-4 lg:px-8 py-4">
@@ -62,6 +73,14 @@ export default function Home() {
         </div>
       </header>
 
+      {/* 株価ティッカー */}
+      <StockTicker
+        nikkeiPrice={stockData?.nikkei?.price}
+        nikkeiChange={stockData?.nikkei?.changePercent}
+        sp500Price={stockData?.sp500?.price}
+        sp500Change={stockData?.sp500?.changePercent}
+      />
+
       <main className="w-full px-4 lg:px-8 py-8">
         {/* 3カラムグリッドレイアウト: 左1 : 中央1.5 : 右1 */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] xl:grid-cols-[1fr_1.5fr_1fr] gap-6">
@@ -80,7 +99,7 @@ export default function Home() {
 
           {/* 中央：メインコンテンツ */}
           <div className="order-2 lg:order-2">
-            {/* 日付と株価情報 */}
+            {/* 日付表示 */}
             <div className="bg-white rounded-lg shadow-md p-4 mb-6">
               <div className="flex justify-between items-center">
                 <div>
@@ -102,63 +121,16 @@ export default function Home() {
                   {stockLoading ? '更新中...' : '株価を更新'}
                 </button>
               </div>
-
               {stockError && (
                 <div className="mt-3 p-3 bg-red-50 text-red-700 rounded-md text-sm">
                   株価の取得に失敗しました: {stockError}
                 </div>
               )}
+            </div>
 
-              {stockLoading && (
-                <div className="mt-4 text-center text-gray-500">
-                  株価データを読み込み中...
-                </div>
-              )}
-
-              {!stockLoading && stockData && (
-                <div className="mt-4 grid grid-cols-2 gap-4">
-                  {stockData.nikkei && stockData.nikkei.price != null && (
-                    <div className="bg-gray-50 rounded-md p-3">
-                      <div className="text-sm text-gray-500">日経平均</div>
-                      <div className="text-lg font-semibold">
-                        ¥{stockData.nikkei.price.toLocaleString('ja-JP', { minimumFractionDigits: 2 })}
-                      </div>
-                      {stockData.nikkei.changePercent != null && (
-                        <div
-                          className={`text-sm ${
-                            stockData.nikkei.changePercent >= 0
-                              ? 'text-green-600'
-                              : 'text-red-600'
-                          }`}
-                        >
-                          {stockData.nikkei.changePercent >= 0 ? '+' : ''}
-                          {stockData.nikkei.changePercent.toFixed(2)}%
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {stockData.sp500 && stockData.sp500.price != null && (
-                    <div className="bg-gray-50 rounded-md p-3">
-                      <div className="text-sm text-gray-500">S&P500</div>
-                      <div className="text-lg font-semibold">
-                        ${stockData.sp500.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </div>
-                      {stockData.sp500.changePercent != null && (
-                        <div
-                          className={`text-sm ${
-                            stockData.sp500.changePercent >= 0
-                              ? 'text-green-600'
-                              : 'text-red-600'
-                          }`}
-                        >
-                          {stockData.sp500.changePercent >= 0 ? '+' : ''}
-                          {stockData.sp500.changePercent.toFixed(2)}%
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+            {/* 株価チャート */}
+            <div className="mb-6">
+              <StockChart />
             </div>
 
             {/* タブ切り替え */}
@@ -201,6 +173,7 @@ export default function Home() {
                     prediction={todayPrediction}
                     stockData={stockData}
                     onUpdateResult={handleUpdateResult}
+                    onEdit={handleEdit}
                   />
                 )}
 
@@ -214,6 +187,7 @@ export default function Home() {
                       prediction={prediction}
                       stockData={stockData}
                       onUpdateResult={handleUpdateResult}
+                      onEdit={handleEdit}
                     />
                   ))}
               </div>

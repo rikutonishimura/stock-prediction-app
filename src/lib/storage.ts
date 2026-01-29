@@ -202,3 +202,73 @@ export function getPendingPredictions(): PredictionRecord[] {
 export function getConfirmedPredictions(): PredictionRecord[] {
   return getAllPredictions().filter(r => r.confirmedAt !== null);
 }
+
+/**
+ * 予想を編集する（予想値と実際値の両方を編集可能）
+ */
+export function editPrediction(
+  id: string,
+  updates: {
+    nikkei?: { predictedChange?: number; actualChange?: number | null };
+    sp500?: { predictedChange?: number; actualChange?: number | null };
+  }
+): PredictionRecord | null {
+  const records = getAllPredictions();
+  const index = records.findIndex(r => r.id === id);
+
+  if (index === -1) return null;
+
+  const record = records[index];
+
+  // 日経平均の更新
+  if (updates.nikkei) {
+    if (updates.nikkei.predictedChange !== undefined) {
+      record.nikkei.predictedChange = updates.nikkei.predictedChange;
+    }
+    if (updates.nikkei.actualChange !== undefined) {
+      record.nikkei.actualChange = updates.nikkei.actualChange;
+    }
+    // 乖離を再計算
+    if (record.nikkei.actualChange !== null) {
+      record.nikkei.deviation = calculateDeviation(
+        record.nikkei.predictedChange,
+        record.nikkei.actualChange
+      );
+    } else {
+      record.nikkei.deviation = null;
+    }
+  }
+
+  // S&P500の更新
+  if (updates.sp500) {
+    if (updates.sp500.predictedChange !== undefined) {
+      record.sp500.predictedChange = updates.sp500.predictedChange;
+    }
+    if (updates.sp500.actualChange !== undefined) {
+      record.sp500.actualChange = updates.sp500.actualChange;
+    }
+    // 乖離を再計算
+    if (record.sp500.actualChange !== null) {
+      record.sp500.deviation = calculateDeviation(
+        record.sp500.predictedChange,
+        record.sp500.actualChange
+      );
+    } else {
+      record.sp500.deviation = null;
+    }
+  }
+
+  // 確定状態を更新
+  if (record.nikkei.actualChange !== null && record.sp500.actualChange !== null) {
+    if (!record.confirmedAt) {
+      record.confirmedAt = new Date().toISOString();
+    }
+  } else {
+    record.confirmedAt = null;
+  }
+
+  records[index] = record;
+  savePredictions(records);
+
+  return record;
+}
