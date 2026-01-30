@@ -6,6 +6,7 @@
 
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { RankingPanel, ThemeToggle, UserMenu } from '@/components';
@@ -15,10 +16,29 @@ export default function RankingPage() {
   const { user, profile, signOut, loading: authLoading } = useAuth();
   const router = useRouter();
 
+  // 未ログイン時はログインページにリダイレクト
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace('/login');
+    }
+  }, [authLoading, user, router]);
+
   const handleSignOut = async () => {
     await signOut();
     router.push('/login');
   };
+
+  // 認証確認中またはリダイレクト中はローディング表示
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-100 via-blue-50 to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 via-blue-50 to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
