@@ -119,7 +119,7 @@ function ChartPanel({ data, period, color, currency }: ChartPanelProps) {
                 borderRadius: '8px',
                 fontSize: '12px',
               }}
-              formatter={(value: number) => [formatPrice(value), '価格']}
+              formatter={(value) => [formatPrice(value as number), '価格']}
               labelFormatter={(label) => label}
             />
             <ReferenceLine

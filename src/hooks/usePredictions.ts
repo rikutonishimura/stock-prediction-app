@@ -1,7 +1,7 @@
 /**
  * 予想データ管理用カスタムフック
  *
- * localStorageへの保存・読み込みを抽象化し、
+ * Supabaseへの保存・読み込みを抽象化し、
  * UIコンポーネントから簡単にデータを操作できるようにします。
  */
 
@@ -17,9 +17,10 @@ import {
   deletePrediction,
   getPendingPredictions,
   editPrediction,
-} from '@/lib/storage';
+} from '@/lib/supabase-storage';
 import { calculateStockStats } from '@/lib/stats';
 import { canAutoConfirm } from '@/lib/marketHours';
+import { useAuth } from '@/hooks/useAuth';
 
 interface StockData {
   nikkei: StockQuote | null;
@@ -43,7 +44,7 @@ interface UsePredictionsReturn {
   /** 読み込み中フラグ */
   loading: boolean;
   /** 新しい予想を追加 */
-  add: (input: PredictionInput) => PredictionRecord;
+  add: (input: PredictionInput) => Promise<PredictionRecord | null>;
   /** 結果を更新 */
   updateResult: (
     id: string,
@@ -51,7 +52,7 @@ interface UsePredictionsReturn {
       nikkei?: { actualChange: number };
       sp500?: { actualChange: number };
     }
-  ) => PredictionRecord | null;
+  ) => Promise<PredictionRecord | null>;
   /** 予想を編集 */
   edit: (
     id: string,
@@ -59,9 +60,9 @@ interface UsePredictionsReturn {
       nikkei?: { predictedChange?: number; actualChange?: number | null };
       sp500?: { predictedChange?: number; actualChange?: number | null };
     }
-  ) => PredictionRecord | null;
+  ) => Promise<PredictionRecord | null>;
   /** 予想を削除 */
-  remove: (id: string) => boolean;
+  remove: (id: string) => Promise<boolean>;
   /** データを再読み込み */
   refresh: () => void;
 }
@@ -72,20 +73,35 @@ interface UsePredictionsReturn {
  */
 export function usePredictions(options: UsePredictionsOptions = {}): UsePredictionsReturn {
   const { stockData } = options;
+  const { user } = useAuth();
   const [predictions, setPredictions] = useState<PredictionRecord[]>([]);
   const [todayPrediction, setTodayPrediction] = useState<PredictionRecord | null>(null);
   const [pendingPredictions, setPendingPredictions] = useState<PredictionRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const autoConfirmProcessedRef = useRef<Set<string>>(new Set());
 
-  const loadData = useCallback(() => {
+  const loadData = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    const data = getAllPredictions();
-    setPredictions(data);
-    setTodayPrediction(getTodayPrediction());
-    setPendingPredictions(getPendingPredictions());
-    setLoading(false);
-  }, []);
+    try {
+      const [allData, today, pending] = await Promise.all([
+        getAllPredictions(user.id),
+        getTodayPrediction(user.id),
+        getPendingPredictions(user.id),
+      ]);
+      setPredictions(allData);
+      setTodayPrediction(today);
+      setPendingPredictions(pending);
+    } catch (error) {
+      console.error('Error loading predictions:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
   useEffect(() => {
     loadData();
@@ -93,97 +109,128 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
 
   // 自動確定処理
   useEffect(() => {
-    if (!stockData?.nikkei?.changePercent || !stockData?.sp500?.changePercent) {
+    if (!user || !stockData?.nikkei?.changePercent || !stockData?.sp500?.changePercent) {
       return;
     }
 
-    const pending = getPendingPredictions();
+    const processAutoConfirm = async () => {
+      for (const record of pendingPredictions) {
+        // 既に処理済みの場合はスキップ
+        if (autoConfirmProcessedRef.current.has(record.id)) {
+          continue;
+        }
 
-    pending.forEach((record) => {
-      // 既に処理済みの場合はスキップ
-      if (autoConfirmProcessedRef.current.has(record.id)) {
-        return;
-      }
+        // 自動確定可能かチェック
+        if (canAutoConfirm(record.date, record.confirmedAt)) {
+          // 自動確定を実行
+          const updated = await updatePredictionResult(user.id, record.id, {
+            nikkei: { actualChange: stockData.nikkei!.changePercent },
+            sp500: { actualChange: stockData.sp500!.changePercent },
+          });
 
-      // 自動確定可能かチェック
-      if (canAutoConfirm(record.date, record.confirmedAt)) {
-        // 自動確定を実行
-        const updated = updatePredictionResult(record.id, {
-          nikkei: { actualChange: stockData.nikkei!.changePercent },
-          sp500: { actualChange: stockData.sp500!.changePercent },
-        });
-
-        if (updated) {
-          autoConfirmProcessedRef.current.add(record.id);
-          setPredictions((prev) =>
-            prev.map((p) => (p.id === record.id ? updated : p))
-          );
-          setTodayPrediction(getTodayPrediction());
-          setPendingPredictions(getPendingPredictions());
-          console.log(`[自動確定] ${record.date} の予想を自動確定しました`);
+          if (updated) {
+            autoConfirmProcessedRef.current.add(record.id);
+            setPredictions((prev) =>
+              prev.map((p) => (p.id === record.id ? updated : p))
+            );
+            console.log(`[自動確定] ${record.date} の予想を自動確定しました`);
+          }
         }
       }
-    });
-  }, [stockData]);
 
-  const add = useCallback((input: PredictionInput): PredictionRecord => {
-    const newRecord = addPrediction(input);
-    setPredictions(prev => [...prev, newRecord]);
-    setTodayPrediction(newRecord);
-    setPendingPredictions(getPendingPredictions());
+      // 再読み込み
+      const [today, pending] = await Promise.all([
+        getTodayPrediction(user.id),
+        getPendingPredictions(user.id),
+      ]);
+      setTodayPrediction(today);
+      setPendingPredictions(pending);
+    };
+
+    processAutoConfirm();
+  }, [user, stockData, pendingPredictions]);
+
+  const add = useCallback(async (input: PredictionInput): Promise<PredictionRecord | null> => {
+    if (!user) return null;
+
+    const newRecord = await addPrediction(user.id, input);
+    if (newRecord) {
+      setPredictions(prev => [newRecord, ...prev]);
+      setTodayPrediction(newRecord);
+      const pending = await getPendingPredictions(user.id);
+      setPendingPredictions(pending);
+    }
     return newRecord;
-  }, []);
+  }, [user]);
 
-  const updateResult = useCallback(
-    (
+  const updateResultFn = useCallback(
+    async (
       id: string,
       results: {
         nikkei?: { actualChange: number };
         sp500?: { actualChange: number };
       }
-    ): PredictionRecord | null => {
-      const updated = updatePredictionResult(id, results);
+    ): Promise<PredictionRecord | null> => {
+      if (!user) return null;
+
+      const updated = await updatePredictionResult(user.id, id, results);
       if (updated) {
         setPredictions(prev =>
           prev.map(p => (p.id === id ? updated : p))
         );
-        setTodayPrediction(getTodayPrediction());
-        setPendingPredictions(getPendingPredictions());
+        const [today, pending] = await Promise.all([
+          getTodayPrediction(user.id),
+          getPendingPredictions(user.id),
+        ]);
+        setTodayPrediction(today);
+        setPendingPredictions(pending);
       }
       return updated;
     },
-    []
+    [user]
   );
 
-  const remove = useCallback((id: string): boolean => {
-    const success = deletePrediction(id);
+  const remove = useCallback(async (id: string): Promise<boolean> => {
+    if (!user) return false;
+
+    const success = await deletePrediction(user.id, id);
     if (success) {
       setPredictions(prev => prev.filter(p => p.id !== id));
-      setTodayPrediction(getTodayPrediction());
-      setPendingPredictions(getPendingPredictions());
+      const [today, pending] = await Promise.all([
+        getTodayPrediction(user.id),
+        getPendingPredictions(user.id),
+      ]);
+      setTodayPrediction(today);
+      setPendingPredictions(pending);
     }
     return success;
-  }, []);
+  }, [user]);
 
-  const edit = useCallback(
-    (
+  const editFn = useCallback(
+    async (
       id: string,
       updates: {
         nikkei?: { predictedChange?: number; actualChange?: number | null };
         sp500?: { predictedChange?: number; actualChange?: number | null };
       }
-    ): PredictionRecord | null => {
-      const updated = editPrediction(id, updates);
+    ): Promise<PredictionRecord | null> => {
+      if (!user) return null;
+
+      const updated = await editPrediction(user.id, id, updates);
       if (updated) {
         setPredictions(prev =>
           prev.map(p => (p.id === id ? updated : p))
         );
-        setTodayPrediction(getTodayPrediction());
-        setPendingPredictions(getPendingPredictions());
+        const [today, pending] = await Promise.all([
+          getTodayPrediction(user.id),
+          getPendingPredictions(user.id),
+        ]);
+        setTodayPrediction(today);
+        setPendingPredictions(pending);
       }
       return updated;
     },
-    []
+    [user]
   );
 
   // 統計データ
@@ -199,8 +246,8 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
     stats,
     loading,
     add,
-    updateResult,
-    edit,
+    updateResult: updateResultFn,
+    edit: editFn,
     remove,
     refresh: loadData,
   };

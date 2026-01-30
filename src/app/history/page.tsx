@@ -7,49 +7,73 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { HistoryTable, StatsPanel } from '@/components';
 import { usePredictions } from '@/hooks/usePredictions';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function HistoryPage() {
   const { predictions, stats, remove, edit, refresh } = usePredictions();
+  const { profile, signOut, loading: authLoading } = useAuth();
+  const router = useRouter();
 
-  const handleDelete = (id: string) => {
-    remove(id);
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/login');
+  };
+
+  const handleDelete = async (id: string) => {
+    await remove(id);
     refresh();
   };
 
-  const handleEdit = (
+  const handleEdit = async (
     id: string,
     updates: {
       nikkei?: { predictedChange?: number; actualChange?: number | null };
       sp500?: { predictedChange?: number; actualChange?: number | null };
     }
   ) => {
-    edit(id, updates);
+    await edit(id, updates);
     refresh();
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gradient-to-b from-slate-100 via-blue-50 to-slate-100">
       {/* ヘッダー */}
       <header className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-800">株価予測トレーニング</h1>
-            <nav className="flex gap-4">
-              <Link
-                href="/"
-                className="text-gray-600 font-medium hover:text-gray-800"
-              >
-                ホーム
-              </Link>
-              <Link
-                href="/history"
-                className="text-blue-600 font-medium hover:text-blue-800"
-              >
-                履歴
-              </Link>
-            </nav>
+            <div className="flex items-center gap-6">
+              <nav className="flex gap-4">
+                <Link
+                  href="/"
+                  className="text-gray-600 font-medium hover:text-gray-800"
+                >
+                  ホーム
+                </Link>
+                <Link
+                  href="/history"
+                  className="text-blue-600 font-medium hover:text-blue-800"
+                >
+                  履歴
+                </Link>
+              </nav>
+              {!authLoading && profile && (
+                <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
+                  <span className="text-sm text-gray-600">
+                    {profile.name} さん
+                  </span>
+                  <button
+                    onClick={handleSignOut}
+                    className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    ログアウト
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>

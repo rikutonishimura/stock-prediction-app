@@ -8,10 +8,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { PredictionForm, ResultCard, StatsPanel, NewsList, StockTicker, StockChart } from '@/components';
 import { useStock } from '@/hooks/useStock';
 import { usePredictions } from '@/hooks/usePredictions';
 import { useNews } from '@/hooks/useNews';
+import { useAuth } from '@/hooks/useAuth';
 import type { PredictionInput } from '@/types';
 
 export default function Home() {
@@ -20,31 +22,38 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'predict' | 'stats'>('predict');
   const { items: japanNews, loading: japanNewsLoading, error: japanNewsError, refetch: refetchJapanNews } = useNews('japan');
   const { items: usNews, loading: usNewsLoading, error: usNewsError, refetch: refetchUsNews } = useNews('us');
+  const { profile, signOut, loading: authLoading } = useAuth();
+  const router = useRouter();
 
-  const handleSubmit = (input: PredictionInput) => {
-    add(input);
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/login');
+  };
+
+  const handleSubmit = async (input: PredictionInput) => {
+    await add(input);
     refresh();
   };
 
-  const handleUpdateResult = (
+  const handleUpdateResult = async (
     id: string,
     results: {
       nikkei?: { actualChange: number };
       sp500?: { actualChange: number };
     }
   ) => {
-    updateResult(id, results);
+    await updateResult(id, results);
     refresh();
   };
 
-  const handleEdit = (
+  const handleEdit = async (
     id: string,
     updates: {
       nikkei?: { predictedChange?: number; actualChange?: number | null };
       sp500?: { predictedChange?: number; actualChange?: number | null };
     }
   ) => {
-    edit(id, updates);
+    await edit(id, updates);
     refresh();
   };
 
@@ -55,20 +64,35 @@ export default function Home() {
         <div className="w-full px-4 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-gray-800">株価予測トレーニング</h1>
-            <nav className="flex gap-4">
-              <Link
-                href="/"
-                className="text-blue-600 font-medium hover:text-blue-800"
-              >
-                ホーム
-              </Link>
-              <Link
-                href="/history"
-                className="text-gray-600 font-medium hover:text-gray-800"
-              >
-                履歴
-              </Link>
-            </nav>
+            <div className="flex items-center gap-6">
+              <nav className="flex gap-4">
+                <Link
+                  href="/"
+                  className="text-blue-600 font-medium hover:text-blue-800"
+                >
+                  ホーム
+                </Link>
+                <Link
+                  href="/history"
+                  className="text-gray-600 font-medium hover:text-gray-800"
+                >
+                  履歴
+                </Link>
+              </nav>
+              {!authLoading && profile && (
+                <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
+                  <span className="text-sm text-gray-600">
+                    {profile.name} さん
+                  </span>
+                  <button
+                    onClick={handleSignOut}
+                    className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    ログアウト
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
