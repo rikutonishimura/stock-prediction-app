@@ -6,122 +6,31 @@
 }
 
 .dark {
-  --background: #121212;
-  --foreground: #d4d4d4;
+  --background: #0a0a0a;
+  --foreground: #f1f5f9;
 }
 
-/* ダークモード用の目に優しい色調整 */
-/* 背景色をより暗く、ニュートラルなグレーに */
-.dark .bg-slate-900 {
-  background-color: #121212 !important;
-}
-
-.dark .bg-slate-800 {
-  background-color: #1a1a1a !important;
-}
-
-.dark .bg-slate-700 {
-  background-color: #252525 !important;
-}
-
-.dark .bg-slate-600 {
-  background-color: #333333 !important;
-}
-
-/* グラデーション背景の調整 */
+/* ダークモード: ページ全体の背景をより暗く */
 .dark .from-slate-900 {
-  --tw-gradient-from: #0d0d0d !important;
+  --tw-gradient-from: #0a0a0a !important;
 }
 
 .dark .via-slate-800 {
-  --tw-gradient-via: #151515 !important;
+  --tw-gradient-via: #0f0f0f !important;
 }
 
 .dark .to-slate-900 {
-  --tw-gradient-to: #0d0d0d !important;
+  --tw-gradient-to: #0a0a0a !important;
 }
 
-/* テキストの明るさを抑える */
-.dark .text-white {
-  color: #e8e8e8 !important;
+/* ダークモード: カード（ヘッダー、フッター、パネル）の背景を少し暗めに */
+.dark .bg-slate-800 {
+  background-color: #161b22 !important;
 }
 
-.dark .text-gray-100 {
-  color: #d4d4d4 !important;
-}
-
-.dark .text-gray-200 {
-  color: #c4c4c4 !important;
-}
-
-.dark .text-gray-300 {
-  color: #a8a8a8 !important;
-}
-
-.dark .text-gray-400 {
-  color: #888888 !important;
-}
-
-/* ボーダーの色を暗く */
-.dark .border-slate-600 {
-  border-color: #333333 !important;
-}
-
-.dark .border-slate-700 {
-  border-color: #2a2a2a !important;
-}
-
-/* カードやパネルの背景 */
-.dark .bg-gray-50 {
-  background-color: #1e1e1e !important;
-}
-
-/* 青系の色をより落ち着いた色に */
-.dark .bg-blue-600 {
-  background-color: #2563eb !important;
-}
-
-.dark .text-blue-400 {
-  color: #60a5fa !important;
-}
-
-.dark .text-blue-300 {
-  color: #7dd3fc !important;
-}
-
-/* 緑色を目に優しく */
-.dark .text-green-400 {
-  color: #4ade80 !important;
-}
-
-/* 赤色を目に優しく */
-.dark .text-red-400 {
-  color: #f87171 !important;
-}
-
-/* シャドウを抑える */
-.dark .shadow-md,
-.dark .shadow-lg,
-.dark .shadow-xl {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2) !important;
-}
-
-/* フォーカスリングの色を調整 */
-.dark .focus\:ring-blue-500:focus {
-  --tw-ring-color: rgba(59, 130, 246, 0.5) !important;
-}
-
-/* ホバー状態の背景を暗く */
-.dark .hover\:bg-slate-600:hover {
-  background-color: #2d2d2d !important;
-}
-
-.dark .hover\:bg-slate-700:hover {
-  background-color: #222222 !important;
-}
-
-.dark .hover\:bg-gray-100:hover {
-  background-color: #2a2a2a !important;
+/* ダークモード: カード内の入力欄などの背景 */
+.dark .bg-slate-700 {
+  background-color: #1c2128 !important;
 }
 
 @theme inline {
@@ -144,7 +53,7 @@ body {
 }
 
 .dark .scrollbar-thin {
-  scrollbar-color: #3a3a3a transparent;
+  scrollbar-color: #475569 transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -161,7 +70,7 @@ body {
 }
 
 .dark .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: #3a3a3a;
+  background-color: #475569;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
@@ -169,7 +78,7 @@ body {
 }
 
 .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: #4a4a4a;
+  background-color: #64748b;
 }
 
 /* 株価ティッカー */
@@ -198,28 +107,16 @@ body {
   border-right: 1px solid #374151;
 }
 
-.dark .ticker-item {
-  border-right-color: #333333;
-}
-
 .ticker-name {
   font-weight: 600;
   font-size: 13px;
   color: #9ca3af;
 }
 
-.dark .ticker-name {
-  color: #888888;
-}
-
 .ticker-price {
   font-size: 14px;
   font-weight: 700;
   color: #ffffff;
-}
-
-.dark .ticker-price {
-  color: #d4d4d4;
 }
 
 .ticker-change {
@@ -234,19 +131,9 @@ body {
   background-color: rgba(16, 185, 129, 0.15);
 }
 
-.dark .ticker-change.positive {
-  color: #4ade80;
-  background-color: rgba(74, 222, 128, 0.1);
-}
-
 .ticker-change.negative {
   color: #ef4444;
   background-color: rgba(239, 68, 68, 0.15);
-}
-
-.dark .ticker-change.negative {
-  color: #f87171;
-  background-color: rgba(248, 113, 113, 0.1);
 }
 
 @keyframes ticker-scroll {
