@@ -76,12 +76,12 @@ export default function HistoryPage() {
                   onSignOut={handleSignOut}
                 />
               ) : (
-                <Link
-                  href="/login"
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                <button
+                  onClick={() => router.push('/login')}
+                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
                 >
                   ログイン
-                </Link>
+                </button>
               )}
             </div>
           </div>
