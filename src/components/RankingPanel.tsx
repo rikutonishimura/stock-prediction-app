@@ -1,0 +1,188 @@
+/**
+ * ランキングパネルコンポーネント
+ *
+ * 予測精度ランキングを表示します。
+ */
+
+'use client';
+
+import { useRanking, RankingUser } from '@/hooks/useRanking';
+import { formatNumber } from '@/lib/stats';
+import { useAuth } from '@/hooks/useAuth';
+
+interface RankingRowProps {
+  rank: number;
+  user: RankingUser;
+  isCurrentUser: boolean;
+}
+
+function RankingRow({ rank, user, isCurrentUser }: RankingRowProps) {
+  const getMedalEmoji = (rank: number) => {
+    switch (rank) {
+      case 1: return '🥇';
+      case 2: return '🥈';
+      case 3: return '🥉';
+      default: return null;
+    }
+  };
+
+  const medal = getMedalEmoji(rank);
+
+  return (
+    <tr
+      className={`border-b border-gray-100 dark:border-slate-700 ${
+        isCurrentUser
+          ? 'bg-blue-50 dark:bg-blue-900/30'
+          : 'hover:bg-gray-50 dark:hover:bg-slate-700'
+      }`}
+    >
+      <td className="py-3 px-3 text-center">
+        {medal ? (
+          <span className="text-lg">{medal}</span>
+        ) : (
+          <span className="text-gray-500 dark:text-gray-400 font-medium">{rank}</span>
+        )}
+      </td>
+      <td className="py-3 px-3">
+        <span className={`font-medium ${isCurrentUser ? 'text-blue-600 dark:text-blue-400' : 'dark:text-white'}`}>
+          {user.userName}
+          {isCurrentUser && (
+            <span className="ml-2 text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded">
+              あなた
+            </span>
+          )}
+        </span>
+      </td>
+      <td className="py-3 px-3 text-right font-mono">
+        <span
+          className={`font-semibold ${
+            user.averageDeviation <= 0.5
+              ? 'text-green-600 dark:text-green-400'
+              : user.averageDeviation <= 1.0
+              ? 'text-yellow-600 dark:text-yellow-400'
+              : 'text-red-600 dark:text-red-400'
+          }`}
+        >
+          {formatNumber(user.averageDeviation)}
+        </span>
+      </td>
+      <td className="py-3 px-3 text-right font-mono dark:text-gray-300">
+        {formatNumber(user.directionAccuracy)}%
+      </td>
+      <td className="py-3 px-3 text-right text-gray-500 dark:text-gray-400">
+        {user.confirmedPredictions}回
+      </td>
+    </tr>
+  );
+}
+
+export function RankingPanel() {
+  const { rankings, totalUsers, loading, error, refetch } = useRanking();
+  const { user } = useAuth();
+
+  if (error) {
+    return (
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">予測精度ランキング</h3>
+        <div className="text-red-600 dark:text-red-400 text-center py-4">{error}</div>
+        <button
+          onClick={refetch}
+          className="mt-2 w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+        >
+          再読み込み
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white">予測精度ランキング</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            平均乖離が小さいほど精度が高い
+          </p>
+        </div>
+        <button
+          onClick={refetch}
+          disabled={loading}
+          className="px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors text-sm"
+        >
+          {loading ? '更新中...' : '更新'}
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="animate-pulse space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-12 bg-gray-100 dark:bg-slate-700 rounded"></div>
+          ))}
+        </div>
+      ) : rankings.length === 0 ? (
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+          まだランキングデータがありません
+        </div>
+      ) : (
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-slate-600">
+                  <th className="text-center py-3 px-3 text-sm font-semibold text-gray-600 dark:text-gray-300 w-16">
+                    順位
+                  </th>
+                  <th className="text-left py-3 px-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
+                    ユーザー
+                  </th>
+                  <th className="text-right py-3 px-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
+                    平均乖離
+                  </th>
+                  <th className="text-right py-3 px-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
+                    方向正答率
+                  </th>
+                  <th className="text-right py-3 px-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
+                    予想回数
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rankings.map((rankingUser, index) => (
+                  <RankingRow
+                    key={rankingUser.userId}
+                    rank={index + 1}
+                    user={rankingUser}
+                    isCurrentUser={user?.id === rankingUser.userId}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 text-right">
+            参加者: {totalUsers}人
+          </div>
+
+          {/* 凡例 */}
+          <div className="mt-4 p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
+            <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-2 text-sm">乖離の目安</h4>
+            <div className="flex flex-wrap gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                <span className="text-gray-600 dark:text-gray-300">0.5以下: 優秀</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
+                <span className="text-gray-600 dark:text-gray-300">0.5-1.0: 普通</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-red-500"></span>
+                <span className="text-gray-600 dark:text-gray-300">1.0以上: 要改善</span>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

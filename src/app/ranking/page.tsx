@@ -1,41 +1,23 @@
 /**
- * 履歴ページ
+ * ランキングページ
  *
- * 過去の予想一覧と詳細な統計を表示します。
+ * 全ユーザーの予測精度ランキングを表示します。
  */
 
 'use client';
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { HistoryTable, StatsPanel, ThemeToggle } from '@/components';
-import { usePredictions } from '@/hooks/usePredictions';
+import { RankingPanel, ThemeToggle } from '@/components';
 import { useAuth } from '@/hooks/useAuth';
 
-export default function HistoryPage() {
-  const { predictions, stats, remove, edit, refresh } = usePredictions();
+export default function RankingPage() {
   const { profile, signOut, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const handleSignOut = async () => {
     await signOut();
     router.push('/login');
-  };
-
-  const handleDelete = async (id: string) => {
-    await remove(id);
-    refresh();
-  };
-
-  const handleEdit = async (
-    id: string,
-    updates: {
-      nikkei?: { predictedChange?: number; actualChange?: number | null };
-      sp500?: { predictedChange?: number; actualChange?: number | null };
-    }
-  ) => {
-    await edit(id, updates);
-    refresh();
   };
 
   return (
@@ -55,13 +37,13 @@ export default function HistoryPage() {
                 </Link>
                 <Link
                   href="/history"
-                  className="text-blue-600 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300"
+                  className="text-gray-600 dark:text-gray-300 font-medium hover:text-gray-800 dark:hover:text-white"
                 >
                   履歴
                 </Link>
                 <Link
                   href="/ranking"
-                  className="text-gray-600 dark:text-gray-300 font-medium hover:text-gray-800 dark:hover:text-white"
+                  className="text-blue-600 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300"
                 >
                   ランキング
                 </Link>
@@ -86,15 +68,7 @@ export default function HistoryPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6">予想履歴・統計</h2>
-
-        <div className="space-y-8">
-          {/* 統計パネル */}
-          <StatsPanel stats={stats} />
-
-          {/* 履歴テーブル */}
-          <HistoryTable predictions={predictions} onDelete={handleDelete} onEdit={handleEdit} />
-        </div>
+        <RankingPanel />
       </main>
 
       {/* フッター */}

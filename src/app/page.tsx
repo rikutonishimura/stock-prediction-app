@@ -78,6 +78,12 @@ export default function Home() {
                 >
                   履歴
                 </Link>
+                <Link
+                  href="/ranking"
+                  className="text-gray-600 dark:text-gray-300 font-medium hover:text-gray-800 dark:hover:text-white"
+                >
+                  ランキング
+                </Link>
               </nav>
               <ThemeToggle />
               {!authLoading && profile && (

@@ -12,3 +12,4 @@ export { NewsList } from './NewsList';
 export { StockTicker } from './StockTicker';
 export { StockChart } from './StockChart';
 export { ThemeToggle } from './ThemeToggle';
+export { RankingPanel } from './RankingPanel';
