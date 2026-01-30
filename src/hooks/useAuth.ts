@@ -30,6 +30,15 @@ export function useAuth(): UseAuthReturn {
 
   useEffect(() => {
     const supabase = createClient();
+    let isMounted = true;
+
+    // タイムアウト: 5秒後に強制的にローディング解除
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        console.warn('Auth session check timed out');
+        setLoading(false);
+      }
+    }, 5000);
 
     // プロフィールを取得
     const fetchProfile = async (userId: string) => {
@@ -39,7 +48,9 @@ export function useAuth(): UseAuthReturn {
           .select('*')
           .eq('id', userId)
           .single();
-        setProfile(data);
+        if (isMounted) {
+          setProfile(data);
+        }
       } catch (error) {
         console.error('Failed to fetch profile:', error);
       }
@@ -49,14 +60,19 @@ export function useAuth(): UseAuthReturn {
     const getSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchProfile(session.user.id);
+        if (isMounted) {
+          setUser(session?.user ?? null);
+          if (session?.user) {
+            await fetchProfile(session.user.id);
+          }
         }
       } catch (error) {
         console.error('Failed to get session:', error);
       } finally {
-        setLoading(false);
+        clearTimeout(timeoutId);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -74,7 +90,11 @@ export function useAuth(): UseAuthReturn {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      subscription.unsubscribe();
+    };
   }, []);
 
   // サインアップ
