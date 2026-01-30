@@ -8,7 +8,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { HistoryTable, StatsPanel } from '@/components';
+import { HistoryTable, StatsPanel, ThemeToggle } from '@/components';
 import { usePredictions } from '@/hooks/usePredictions';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -39,35 +39,36 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-100 via-blue-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-b from-slate-100 via-blue-50 to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {/* ヘッダー */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white dark:bg-slate-800 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-800">株価予測トレーニング</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">株価予測トレーニング</h1>
             <div className="flex items-center gap-6">
               <nav className="flex gap-4">
                 <Link
                   href="/"
-                  className="text-gray-600 font-medium hover:text-gray-800"
+                  className="text-gray-600 dark:text-gray-300 font-medium hover:text-gray-800 dark:hover:text-white"
                 >
                   ホーム
                 </Link>
                 <Link
                   href="/history"
-                  className="text-blue-600 font-medium hover:text-blue-800"
+                  className="text-blue-600 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300"
                 >
                   履歴
                 </Link>
               </nav>
+              <ThemeToggle />
               {!authLoading && profile && (
-                <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
-                  <span className="text-sm text-gray-600">
+                <div className="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-slate-600">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
                     {profile.name} さん
                   </span>
                   <button
                     onClick={handleSignOut}
-                    className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
                   >
                     ログアウト
                   </button>
@@ -79,7 +80,7 @@ export default function HistoryPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <h2 className="text-xl font-bold text-gray-800 mb-6">予想履歴・統計</h2>
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6">予想履歴・統計</h2>
 
         <div className="space-y-8">
           {/* 統計パネル */}
@@ -91,8 +92,8 @@ export default function HistoryPage() {
       </main>
 
       {/* フッター */}
-      <footer className="bg-white border-t mt-8">
-        <div className="max-w-4xl mx-auto px-4 py-4 text-center text-sm text-gray-500">
+      <footer className="bg-white dark:bg-slate-800 border-t dark:border-slate-700 mt-8">
+        <div className="max-w-4xl mx-auto px-4 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
           株価予測トレーニングアプリ - 学習目的専用
         </div>
       </footer>

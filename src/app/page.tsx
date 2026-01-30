@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { PredictionForm, ResultCard, StatsPanel, NewsList, StockTicker, StockChart } from '@/components';
+import { PredictionForm, ResultCard, StatsPanel, NewsList, StockTicker, StockChart, ThemeToggle } from '@/components';
 import { useStock } from '@/hooks/useStock';
 import { usePredictions } from '@/hooks/usePredictions';
 import { useNews } from '@/hooks/useNews';
@@ -58,35 +58,36 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-100 via-blue-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-b from-slate-100 via-blue-50 to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {/* ヘッダー */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white dark:bg-slate-800 shadow-sm">
         <div className="w-full px-4 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-800">株価予測トレーニング</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">株価予測トレーニング</h1>
             <div className="flex items-center gap-6">
               <nav className="flex gap-4">
                 <Link
                   href="/"
-                  className="text-blue-600 font-medium hover:text-blue-800"
+                  className="text-blue-600 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300"
                 >
                   ホーム
                 </Link>
                 <Link
                   href="/history"
-                  className="text-gray-600 font-medium hover:text-gray-800"
+                  className="text-gray-600 dark:text-gray-300 font-medium hover:text-gray-800 dark:hover:text-white"
                 >
                   履歴
                 </Link>
               </nav>
+              <ThemeToggle />
               {!authLoading && profile && (
-                <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
-                  <span className="text-sm text-gray-600">
+                <div className="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-slate-600">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
                     {profile.name} さん
                   </span>
                   <button
                     onClick={handleSignOut}
-                    className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
                   >
                     ログアウト
                   </button>
@@ -124,11 +125,11 @@ export default function Home() {
           {/* 中央：メインコンテンツ */}
           <div className="order-2 lg:order-2">
             {/* 日付表示 */}
-            <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4 mb-6">
               <div className="flex justify-between items-center">
                 <div>
-                  <div className="text-sm text-gray-500">今日の日付</div>
-                  <div className="text-lg font-semibold">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">今日の日付</div>
+                  <div className="text-lg font-semibold dark:text-white">
                     {new Date().toLocaleDateString('ja-JP', {
                       year: 'numeric',
                       month: 'long',
@@ -140,13 +141,13 @@ export default function Home() {
                 <button
                   onClick={refetch}
                   disabled={stockLoading}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 disabled:opacity-50 transition-colors text-sm"
+                  className="px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors text-sm"
                 >
                   {stockLoading ? '更新中...' : '株価を更新'}
                 </button>
               </div>
               {stockError && (
-                <div className="mt-3 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+                <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md text-sm">
                   株価の取得に失敗しました: {stockError}
                 </div>
               )}
@@ -164,7 +165,7 @@ export default function Home() {
                 className={`px-6 py-2 rounded-md font-medium transition-colors ${
                   activeTab === 'predict'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                    : 'bg-white dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-600'
                 }`}
               >
                 予想入力
@@ -174,7 +175,7 @@ export default function Home() {
                 className={`px-6 py-2 rounded-md font-medium transition-colors ${
                   activeTab === 'stats'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                    : 'bg-white dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-600'
                 }`}
               >
                 統計
@@ -220,9 +221,9 @@ export default function Home() {
             )}
 
             {/* クイック情報 */}
-            <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-              <h3 className="font-semibold text-blue-800 mb-2">使い方</h3>
-              <ol className="list-decimal list-inside space-y-1 text-sm text-blue-700">
+            <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+              <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">使い方</h3>
+              <ol className="list-decimal list-inside space-y-1 text-sm text-blue-700 dark:text-blue-400">
                 <li>朝、予想変化率を入力して「予想を登録」をクリック</li>
                 <li>市場終了後、「結果を確定」ボタンで実際の値を記録</li>
                 <li>統計タブで乖離の推移を確認し、予測精度を改善</li>
@@ -246,8 +247,8 @@ export default function Home() {
       </main>
 
       {/* フッター */}
-      <footer className="bg-white border-t mt-8">
-        <div className="w-full px-4 lg:px-8 py-4 text-center text-sm text-gray-500">
+      <footer className="bg-white dark:bg-slate-800 border-t dark:border-slate-700 mt-8">
+        <div className="w-full px-4 lg:px-8 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
           株価予測トレーニングアプリ - 学習目的専用
         </div>
       </footer>

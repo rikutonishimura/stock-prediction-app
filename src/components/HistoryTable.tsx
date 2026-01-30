@@ -80,18 +80,18 @@ function EditModal({ prediction, onSave, onClose }: EditModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">
+      <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
           {prediction.date} の予想を編集
         </h3>
 
         <div className="space-y-4">
           {/* 日経平均 */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="font-semibold text-gray-700 mb-3">日経平均</h4>
+          <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-4">
+            <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">日経平均</h4>
             <div className="space-y-2">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">予想変化率 (%)</label>
+                <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">予想変化率 (%)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -100,11 +100,11 @@ function EditModal({ prediction, onSave, onClose }: EditModalProps) {
                     ...prev,
                     nikkei: { ...prev.nikkei, predicted: e.target.value }
                   }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-slate-600 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">実際変化率 (%) - 空欄で未確定</label>
+                <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">実際変化率 (%) - 空欄で未確定</label>
                 <input
                   type="number"
                   step="0.01"
@@ -114,18 +114,18 @@ function EditModal({ prediction, onSave, onClose }: EditModalProps) {
                     nikkei: { ...prev.nikkei, actual: e.target.value }
                   }))}
                   placeholder="未確定"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-slate-600 dark:text-white"
                 />
               </div>
             </div>
           </div>
 
           {/* S&P500 */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="font-semibold text-gray-700 mb-3">S&P500</h4>
+          <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-4">
+            <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">S&P500</h4>
             <div className="space-y-2">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">予想変化率 (%)</label>
+                <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">予想変化率 (%)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -134,11 +134,11 @@ function EditModal({ prediction, onSave, onClose }: EditModalProps) {
                     ...prev,
                     sp500: { ...prev.sp500, predicted: e.target.value }
                   }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-slate-600 dark:text-white"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">実際変化率 (%) - 空欄で未確定</label>
+                <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">実際変化率 (%) - 空欄で未確定</label>
                 <input
                   type="number"
                   step="0.01"
@@ -148,7 +148,7 @@ function EditModal({ prediction, onSave, onClose }: EditModalProps) {
                     sp500: { ...prev.sp500, actual: e.target.value }
                   }))}
                   placeholder="未確定"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-slate-600 dark:text-white"
                 />
               </div>
             </div>
@@ -158,7 +158,7 @@ function EditModal({ prediction, onSave, onClose }: EditModalProps) {
         <div className="flex justify-end gap-2 mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700 rounded transition-colors"
           >
             キャンセル
           </button>
@@ -195,9 +195,9 @@ export function HistoryTable({ predictions, onDelete, onEdit }: HistoryTableProp
 
   if (predictions.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">予想履歴</h3>
-        <p className="text-gray-500 text-center py-8">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">予想履歴</h3>
+        <p className="text-gray-500 dark:text-gray-400 text-center py-8">
           まだ予想データがありません
         </p>
       </div>
@@ -206,9 +206,9 @@ export function HistoryTable({ predictions, onDelete, onEdit }: HistoryTableProp
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-800">予想履歴</h3>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-white">予想履歴</h3>
 
           {/* 銘柄切り替えタブ */}
           <div className="flex gap-2">
@@ -217,7 +217,7 @@ export function HistoryTable({ predictions, onDelete, onEdit }: HistoryTableProp
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 selectedSymbol === 'nikkei'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
               }`}
             >
               日経平均
@@ -227,7 +227,7 @@ export function HistoryTable({ predictions, onDelete, onEdit }: HistoryTableProp
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 selectedSymbol === 'sp500'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
               }`}
             >
               S&P500
@@ -239,21 +239,21 @@ export function HistoryTable({ predictions, onDelete, onEdit }: HistoryTableProp
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600">
+              <tr className="border-b border-gray-200 dark:border-slate-600">
+                <th className="text-left py-3 px-2 text-sm font-semibold text-gray-600 dark:text-gray-300">
                   日付
                 </th>
-                <th className="text-right py-3 px-2 text-sm font-semibold text-gray-600">
+                <th className="text-right py-3 px-2 text-sm font-semibold text-gray-600 dark:text-gray-300">
                   予想
                 </th>
-                <th className="text-right py-3 px-2 text-sm font-semibold text-gray-600">
+                <th className="text-right py-3 px-2 text-sm font-semibold text-gray-600 dark:text-gray-300">
                   実際
                 </th>
-                <th className="text-right py-3 px-2 text-sm font-semibold text-gray-600">
+                <th className="text-right py-3 px-2 text-sm font-semibold text-gray-600 dark:text-gray-300">
                   乖離
                 </th>
                 {(onDelete || onEdit) && (
-                  <th className="text-center py-3 px-2 text-sm font-semibold text-gray-600">
+                  <th className="text-center py-3 px-2 text-sm font-semibold text-gray-600 dark:text-gray-300">
                     操作
                   </th>
                 )}
@@ -267,10 +267,10 @@ export function HistoryTable({ predictions, onDelete, onEdit }: HistoryTableProp
                 return (
                   <tr
                     key={prediction.id}
-                    className="border-b border-gray-100 hover:bg-gray-50"
+                    className="border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700"
                   >
-                    <td className="py-3 px-2 text-sm">{prediction.date}</td>
-                    <td className="py-3 px-2 text-sm text-right font-mono">
+                    <td className="py-3 px-2 text-sm dark:text-gray-300">{prediction.date}</td>
+                    <td className="py-3 px-2 text-sm text-right font-mono dark:text-gray-300">
                       {formatChange(data.predictedChange)}
                     </td>
                     <td className="py-3 px-2 text-sm text-right font-mono">
@@ -278,8 +278,8 @@ export function HistoryTable({ predictions, onDelete, onEdit }: HistoryTableProp
                         <span
                           className={
                             data.actualChange! >= 0
-                              ? 'text-green-600'
-                              : 'text-red-600'
+                              ? 'text-green-600 dark:text-green-400'
+                              : 'text-red-600 dark:text-red-400'
                           }
                         >
                           {formatChange(data.actualChange!)}
@@ -293,10 +293,10 @@ export function HistoryTable({ predictions, onDelete, onEdit }: HistoryTableProp
                         <span
                           className={`font-semibold ${
                             data.deviation! <= 0.5
-                              ? 'text-green-600'
+                              ? 'text-green-600 dark:text-green-400'
                               : data.deviation! <= 1.0
-                              ? 'text-yellow-600'
-                              : 'text-red-600'
+                              ? 'text-yellow-600 dark:text-yellow-400'
+                              : 'text-red-600 dark:text-red-400'
                           }`}
                         >
                           {formatNumber(data.deviation!)}
@@ -311,7 +311,7 @@ export function HistoryTable({ predictions, onDelete, onEdit }: HistoryTableProp
                           {onEdit && (
                             <button
                               onClick={() => setEditingPrediction(prediction)}
-                              className="text-blue-500 hover:text-blue-700 text-sm"
+                              className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm"
                             >
                               編集
                             </button>
@@ -323,7 +323,7 @@ export function HistoryTable({ predictions, onDelete, onEdit }: HistoryTableProp
                                   onDelete(prediction.id);
                                 }
                               }}
-                              className="text-red-500 hover:text-red-700 text-sm"
+                              className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm"
                             >
                               削除
                             </button>
@@ -339,7 +339,7 @@ export function HistoryTable({ predictions, onDelete, onEdit }: HistoryTableProp
         </div>
 
         {/* 件数表示 */}
-        <div className="mt-4 text-sm text-gray-500 text-right">
+        <div className="mt-4 text-sm text-gray-500 dark:text-gray-400 text-right">
           全 {predictions.length} 件
         </div>
       </div>

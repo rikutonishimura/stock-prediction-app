@@ -50,9 +50,9 @@ export function NewsList({ items, loading, error, category, onRefresh }: NewsLis
   const { title, color } = CATEGORY_LABELS[category];
 
   return (
-    <div className="bg-white rounded-lg shadow-md h-full flex flex-col">
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md h-full flex flex-col">
       {/* ヘッダー */}
-      <div className="p-4 border-b flex justify-between items-center flex-shrink-0">
+      <div className="p-4 border-b dark:border-slate-700 flex justify-between items-center flex-shrink-0">
         <div>
           <h2 className={`font-bold ${color}`}>{title}</h2>
           <span className="text-xs text-gray-400">{items.length}件</span>
@@ -60,7 +60,7 @@ export function NewsList({ items, loading, error, category, onRefresh }: NewsLis
         <button
           onClick={onRefresh}
           disabled={loading}
-          className="text-xs px-3 py-1 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 disabled:opacity-50 transition-colors"
+          className="text-xs px-3 py-1 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors"
         >
           {loading ? '更新中...' : '更新'}
         </button>
@@ -69,7 +69,7 @@ export function NewsList({ items, loading, error, category, onRefresh }: NewsLis
       {/* コンテンツ - スクロール可能 */}
       <div className="flex-1 overflow-y-auto scroll-smooth scrollbar-thin">
         {error && (
-          <div className="p-4 text-sm text-red-600 bg-red-50">
+          <div className="p-4 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30">
             ニュースの取得に失敗しました
           </div>
         )}
@@ -79,8 +79,8 @@ export function NewsList({ items, loading, error, category, onRefresh }: NewsLis
             <div className="animate-pulse space-y-3">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-full"></div>
-                  <div className="h-3 bg-gray-100 rounded w-2/3"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-full"></div>
+                  <div className="h-3 bg-gray-100 dark:bg-slate-600 rounded w-2/3"></div>
                 </div>
               ))}
             </div>
@@ -88,24 +88,24 @@ export function NewsList({ items, loading, error, category, onRefresh }: NewsLis
         )}
 
         {!loading && items.length === 0 && !error && (
-          <div className="p-4 text-center text-gray-500 text-sm">
+          <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
             ニュースがありません
           </div>
         )}
 
-        <ul className="divide-y divide-gray-100">
+        <ul className="divide-y divide-gray-100 dark:divide-slate-700">
           {items.map((item) => (
-            <li key={item.id} className="hover:bg-gray-50 transition-colors">
+            <li key={item.id} className="hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
               <a
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block p-3"
               >
-                <h3 className="text-sm font-medium text-gray-900 line-clamp-2 hover:text-blue-600">
+                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400">
                   {item.title}
                 </h3>
-                <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+                <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                   <span className="truncate max-w-[120px]">{item.source}</span>
                   <span>·</span>
                   <span>{formatRelativeTime(item.publishedAt)}</span>

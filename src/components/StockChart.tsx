@@ -70,21 +70,21 @@ function ChartPanel({ data, period, color, currency }: ChartPanelProps) {
   const isPositive = data.changePercent >= 0;
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4">
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="text-lg font-bold text-gray-800">{data.name}</h3>
-          <div className="text-2xl font-bold mt-1">{formatPrice(data.currentPrice)}</div>
+          <h3 className="text-lg font-bold text-gray-800 dark:text-white">{data.name}</h3>
+          <div className="text-2xl font-bold mt-1 dark:text-white">{formatPrice(data.currentPrice)}</div>
           <div
             className={`text-sm font-medium ${
-              isPositive ? 'text-green-600' : 'text-red-600'
+              isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             }`}
           >
             {isPositive ? '▲' : '▼'} {isPositive ? '+' : ''}
             {data.changePercent.toFixed(2)}%
           </div>
         </div>
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-gray-500 dark:text-gray-400">
           前日終値: {formatPrice(data.previousClose)}
         </div>
       </div>
@@ -149,8 +149,8 @@ export function StockChart() {
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="text-red-600 text-center">{error}</div>
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
+        <div className="text-red-600 dark:text-red-400 text-center">{error}</div>
       </div>
     );
   }
@@ -159,7 +159,7 @@ export function StockChart() {
     <div className="space-y-4">
       {/* 期間選択タブ */}
       <div className="flex justify-between items-center">
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex gap-1 bg-gray-100 dark:bg-slate-700 rounded-lg p-1">
           {(Object.entries(PERIOD_LABELS) as [Period, string][]).map(([key, label]) => (
             <button
               key={key}
@@ -167,8 +167,8 @@ export function StockChart() {
               disabled={loading}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 period === key
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800'
+                  ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
               } disabled:opacity-50`}
             >
               {label}
@@ -177,13 +177,13 @@ export function StockChart() {
         </div>
 
         {/* 表示切り替え */}
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex gap-1 bg-gray-100 dark:bg-slate-700 rounded-lg p-1">
           <button
             onClick={() => setActiveTab('both')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               activeTab === 'both'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
+                ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
             }`}
           >
             両方
@@ -192,8 +192,8 @@ export function StockChart() {
             onClick={() => setActiveTab('nikkei')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               activeTab === 'nikkei'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
+                ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
             }`}
           >
             日経
@@ -202,8 +202,8 @@ export function StockChart() {
             onClick={() => setActiveTab('sp500')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               activeTab === 'sp500'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
+                ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
             }`}
           >
             S&P
@@ -214,17 +214,17 @@ export function StockChart() {
       {/* ローディング表示 */}
       {loading && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="bg-white rounded-lg shadow-md p-4 h-80 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-24 mb-4"></div>
-            <div className="h-8 bg-gray-200 rounded w-32 mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded w-20 mb-4"></div>
-            <div className="h-48 bg-gray-100 rounded"></div>
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4 h-80 animate-pulse">
+            <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-24 mb-4"></div>
+            <div className="h-8 bg-gray-200 dark:bg-slate-700 rounded w-32 mb-2"></div>
+            <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-20 mb-4"></div>
+            <div className="h-48 bg-gray-100 dark:bg-slate-700 rounded"></div>
           </div>
-          <div className="bg-white rounded-lg shadow-md p-4 h-80 animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-24 mb-4"></div>
-            <div className="h-8 bg-gray-200 rounded w-32 mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded w-20 mb-4"></div>
-            <div className="h-48 bg-gray-100 rounded"></div>
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4 h-80 animate-pulse">
+            <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-24 mb-4"></div>
+            <div className="h-8 bg-gray-200 dark:bg-slate-700 rounded w-32 mb-2"></div>
+            <div className="h-4 bg-gray-200 dark:bg-slate-700 rounded w-20 mb-4"></div>
+            <div className="h-48 bg-gray-100 dark:bg-slate-700 rounded"></div>
           </div>
         </div>
       )}

@@ -65,31 +65,31 @@ function SingleResult({
 
   if (isEditing && editValues && onEditChange) {
     return (
-      <div className="bg-gray-50 rounded-lg p-4">
-        <h4 className="font-semibold text-gray-700 mb-3">{title}</h4>
-        <div className="text-xs text-gray-500 mb-3">
+      <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-4">
+        <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">{title}</h4>
+        <div className="text-xs text-gray-500 dark:text-gray-400 mb-3">
           前日終値: {currency}{formatNumber(previousClose, 2)}
         </div>
         <div className="space-y-3">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">予想終値 ({currency})</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">予想終値 ({currency})</label>
             <input
               type="number"
               step={currency === '¥' ? '1' : '0.01'}
               value={editValues.predictedPrice}
               onChange={(e) => onEditChange('predictedPrice', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono bg-white dark:bg-slate-600 dark:text-white"
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">実際終値 ({currency}) - 空欄で未確定</label>
+            <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">実際終値 ({currency}) - 空欄で未確定</label>
             <input
               type="number"
               step={currency === '¥' ? '1' : '0.01'}
               value={editValues.actualPrice}
               onChange={(e) => onEditChange('actualPrice', e.target.value)}
               placeholder="未確定"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono bg-white dark:bg-slate-600 dark:text-white"
             />
           </div>
         </div>
@@ -98,37 +98,37 @@ function SingleResult({
   }
 
   return (
-    <div className="bg-gray-50 rounded-lg p-4">
-      <h4 className="font-semibold text-gray-700 mb-3">{title}</h4>
+    <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-4">
+      <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">{title}</h4>
 
       <div className="space-y-2">
         <div className="flex justify-between">
-          <span className="text-gray-600">予想変化率:</span>
-          <span className="font-mono font-semibold">{formatChange(predicted)}</span>
+          <span className="text-gray-600 dark:text-gray-300">予想変化率:</span>
+          <span className="font-mono font-semibold dark:text-white">{formatChange(predicted)}</span>
         </div>
 
         {isConfirmed ? (
           <>
             <div className="flex justify-between">
-              <span className="text-gray-600">実際変化率:</span>
+              <span className="text-gray-600 dark:text-gray-300">実際変化率:</span>
               <span
                 className={`font-mono font-semibold ${
-                  actual >= 0 ? 'text-green-600' : 'text-red-600'
+                  actual >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                 }`}
               >
                 {formatChange(actual)}
               </span>
             </div>
-            <hr className="my-2" />
+            <hr className="my-2 dark:border-slate-600" />
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">乖離:</span>
+              <span className="text-gray-600 dark:text-gray-300">乖離:</span>
               <span
                 className={`font-mono font-bold text-lg ${
                   deviation! <= 0.5
-                    ? 'text-green-600'
+                    ? 'text-green-600 dark:text-green-400'
                     : deviation! <= 1.0
-                    ? 'text-yellow-600'
-                    : 'text-red-600'
+                    ? 'text-yellow-600 dark:text-yellow-400'
+                    : 'text-red-600 dark:text-red-400'
                 }`}
               >
                 {formatNumber(deviation!)} ポイント
@@ -139,10 +139,10 @@ function SingleResult({
           <>
             {currentChange !== undefined && (
               <div className="flex justify-between">
-                <span className="text-gray-600">現在変化率:</span>
+                <span className="text-gray-600 dark:text-gray-300">現在変化率:</span>
                 <span
                   className={`font-mono ${
-                    currentChange >= 0 ? 'text-green-600' : 'text-red-600'
+                    currentChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                   }`}
                 >
                   {formatChange(currentChange)}
@@ -158,7 +158,7 @@ function SingleResult({
               </button>
             )}
             {!onConfirm && (
-              <div className="mt-2 text-sm text-gray-500 text-center">
+              <div className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">
                 結果待ち
               </div>
             )}
@@ -294,21 +294,21 @@ export function ResultCard({ prediction, stockData, onUpdateResult, onEdit }: Re
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-bold text-gray-800">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-white">
           {prediction.date} の予想
         </h3>
         <div className="flex items-center gap-2">
           {prediction.confirmedAt && !isEditing && (
-            <span className="px-2 py-1 bg-green-100 text-green-800 text-sm rounded">
+            <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-sm rounded">
               確定済み
             </span>
           )}
           {!isEditing && onEdit && (
             <button
               onClick={handleStartEdit}
-              className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+              className="px-3 py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700 rounded transition-colors"
             >
               編集
             </button>
@@ -345,7 +345,7 @@ export function ResultCard({ prediction, stockData, onUpdateResult, onEdit }: Re
           <div className="flex justify-end gap-2 mt-4">
             <button
               onClick={handleCancelEdit}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+              className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-700 rounded transition-colors"
             >
               キャンセル
             </button>

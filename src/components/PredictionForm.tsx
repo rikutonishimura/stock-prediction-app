@@ -106,12 +106,12 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
+    <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-800">本日の予想入力</h2>
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white">本日の予想入力</h2>
 
         {/* 入力モード切り替え */}
-        <div className="flex bg-gray-100 rounded-lg p-1">
+        <div className="flex bg-gray-100 dark:bg-slate-700 rounded-lg p-1">
           <button
             type="button"
             onClick={() => {
@@ -121,8 +121,8 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
             }}
             className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
               inputMode === 'price'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
+                ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
             }`}
           >
             値で入力
@@ -136,8 +136,8 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
             }}
             className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
               inputMode === 'percent'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
+                ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
             }`}
           >
             %で入力
@@ -147,22 +147,22 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
 
       {/* 日経平均 */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3 text-gray-700">日経平均 (^N225)</h3>
-        <div className="bg-gray-50 rounded-lg p-4">
+        <h3 className="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-200">日経平均 (^N225)</h3>
+        <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-4">
           <div className="flex justify-between items-center mb-3">
-            <span className="text-gray-600">前日終値:</span>
-            <span className="font-mono text-lg">
+            <span className="text-gray-600 dark:text-gray-300">前日終値:</span>
+            <span className="font-mono text-lg dark:text-white">
               {stockData?.nikkei?.previousClose != null
                 ? `¥${formatNumber(stockData.nikkei.previousClose, 2)}`
                 : '読み込み中...'}
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <label className="text-gray-600 whitespace-nowrap">
+            <label className="text-gray-600 dark:text-gray-300 whitespace-nowrap">
               {inputMode === 'price' ? '予想終値:' : '予想変化率:'}
             </label>
             <div className="flex-1 flex items-center gap-2">
-              {inputMode === 'price' && <span className="text-gray-600">¥</span>}
+              {inputMode === 'price' && <span className="text-gray-600 dark:text-gray-300">¥</span>}
               <input
                 type="number"
                 step={inputMode === 'price' ? '1' : '0.01'}
@@ -175,14 +175,14 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
                       : '例: 39000'
                     : '例: +0.5 または -0.3'
                 }
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono bg-white dark:bg-slate-600 dark:text-white"
                 disabled={disabled}
               />
-              {inputMode === 'percent' && <span className="text-gray-600">%</span>}
+              {inputMode === 'percent' && <span className="text-gray-600 dark:text-gray-300">%</span>}
             </div>
           </div>
           {nikkeiValue && stockData?.nikkei?.previousClose && (
-            <div className="mt-2 text-sm text-gray-500">
+            <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
               {getCalculatedDisplay(nikkeiValue, stockData.nikkei.previousClose, 'nikkei')}
             </div>
           )}
@@ -191,22 +191,22 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
 
       {/* S&P500 */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3 text-gray-700">S&P500 (^GSPC)</h3>
-        <div className="bg-gray-50 rounded-lg p-4">
+        <h3 className="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-200">S&P500 (^GSPC)</h3>
+        <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-4">
           <div className="flex justify-between items-center mb-3">
-            <span className="text-gray-600">前日終値:</span>
-            <span className="font-mono text-lg">
+            <span className="text-gray-600 dark:text-gray-300">前日終値:</span>
+            <span className="font-mono text-lg dark:text-white">
               {stockData?.sp500?.previousClose != null
                 ? `$${formatNumber(stockData.sp500.previousClose, 2)}`
                 : '読み込み中...'}
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <label className="text-gray-600 whitespace-nowrap">
+            <label className="text-gray-600 dark:text-gray-300 whitespace-nowrap">
               {inputMode === 'price' ? '予想終値:' : '予想変化率:'}
             </label>
             <div className="flex-1 flex items-center gap-2">
-              {inputMode === 'price' && <span className="text-gray-600">$</span>}
+              {inputMode === 'price' && <span className="text-gray-600 dark:text-gray-300">$</span>}
               <input
                 type="number"
                 step={inputMode === 'price' ? '0.01' : '0.01'}
@@ -219,14 +219,14 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
                       : '例: 6100'
                     : '例: +0.5 または -0.3'
                 }
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono bg-white dark:bg-slate-600 dark:text-white"
                 disabled={disabled}
               />
-              {inputMode === 'percent' && <span className="text-gray-600">%</span>}
+              {inputMode === 'percent' && <span className="text-gray-600 dark:text-gray-300">%</span>}
             </div>
           </div>
           {sp500Value && stockData?.sp500?.previousClose && (
-            <div className="mt-2 text-sm text-gray-500">
+            <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
               {getCalculatedDisplay(sp500Value, stockData.sp500.previousClose, 'sp500')}
             </div>
           )}
@@ -236,7 +236,7 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
       <button
         type="submit"
         disabled={disabled || !stockData?.nikkei || !stockData?.sp500}
-        className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+        className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors"
       >
         {disabled ? '本日は入力済みです' : '予想を登録'}
       </button>
