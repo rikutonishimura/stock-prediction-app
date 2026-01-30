@@ -38,9 +38,9 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // 認証不要のパス
-  const publicPaths = ['/login', '/signup', '/api/'];
+  const publicPaths = ['/', '/login', '/signup', '/api/', '/ranking', '/history'];
   const isPublicPath = publicPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
+    path === '/' ? request.nextUrl.pathname === '/' : request.nextUrl.pathname.startsWith(path)
   );
 
   // 未認証ユーザーをログインページにリダイレクト

@@ -8,8 +8,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import type { StockQuote, PredictionInput } from '@/types';
 import { formatNumber } from '@/lib/stats';
+
+interface SubmittedPrediction {
+  nikkei: {
+    previousClose: number;
+    predictedPrice: number;
+    predictedChange: number;
+  };
+  sp500: {
+    previousClose: number;
+    predictedPrice: number;
+    predictedChange: number;
+  };
+}
 
 type InputMode = 'price' | 'percent';
 
@@ -23,6 +37,8 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
   const [inputMode, setInputMode] = useState<InputMode>('price');
   const [nikkeiValue, setNikkeiValue] = useState('');
   const [sp500Value, setSp500Value] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [submittedPrediction, setSubmittedPrediction] = useState<SubmittedPrediction | null>(null);
 
   // 株価データが更新されたら初期値をリセット
   useEffect(() => {
@@ -59,13 +75,19 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
     // 入力モードに応じて変化率を計算
     let nikkeiChange: number;
     let sp500Change: number;
+    let nikkeiPredictedPrice: number;
+    let sp500PredictedPrice: number;
 
     if (inputMode === 'price') {
       nikkeiChange = priceToPercent(nikkeiNum, stockData.nikkei.previousClose);
       sp500Change = priceToPercent(sp500Num, stockData.sp500.previousClose);
+      nikkeiPredictedPrice = nikkeiNum;
+      sp500PredictedPrice = sp500Num;
     } else {
       nikkeiChange = nikkeiNum;
       sp500Change = sp500Num;
+      nikkeiPredictedPrice = percentToPrice(nikkeiNum, stockData.nikkei.previousClose);
+      sp500PredictedPrice = percentToPrice(sp500Num, stockData.sp500.previousClose);
     }
 
     onSubmit({
@@ -78,6 +100,21 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
         predictedChange: sp500Change,
       },
     });
+
+    // モーダル表示用のデータを保存
+    setSubmittedPrediction({
+      nikkei: {
+        previousClose: stockData.nikkei.previousClose,
+        predictedPrice: nikkeiPredictedPrice,
+        predictedChange: nikkeiChange,
+      },
+      sp500: {
+        previousClose: stockData.sp500.previousClose,
+        predictedPrice: sp500PredictedPrice,
+        predictedChange: sp500Change,
+      },
+    });
+    setShowModal(true);
 
     setNikkeiValue('');
     setSp500Value('');
@@ -106,6 +143,7 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
   };
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-gray-800 dark:text-white">本日の予想入力</h2>
@@ -241,5 +279,89 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
         {disabled ? '本日は入力済みです' : '予想を登録'}
       </button>
     </form>
+
+    {/* 登録完了モーダル */}
+    {showModal && submittedPrediction && (
+      <div className="fixed inset-0 bg-white/30 dark:bg-slate-900/30 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-white">予想を登録しました</h3>
+          </div>
+
+          {/* 登録内容 */}
+          <div className="space-y-4 mb-6">
+            <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-4">
+              <div className="font-semibold text-gray-700 dark:text-gray-200 mb-2">日経平均</div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500 dark:text-gray-400">予想終値:</span>
+                <span className="font-mono dark:text-white">¥{formatNumber(submittedPrediction.nikkei.predictedPrice, 0)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500 dark:text-gray-400">予想変化率:</span>
+                <span className={`font-mono ${submittedPrediction.nikkei.predictedChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {submittedPrediction.nikkei.predictedChange >= 0 ? '+' : ''}{formatNumber(submittedPrediction.nikkei.predictedChange, 2)}%
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-4">
+              <div className="font-semibold text-gray-700 dark:text-gray-200 mb-2">S&P500</div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500 dark:text-gray-400">予想終値:</span>
+                <span className="font-mono dark:text-white">${formatNumber(submittedPrediction.sp500.predictedPrice, 2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500 dark:text-gray-400">予想変化率:</span>
+                <span className={`font-mono ${submittedPrediction.sp500.predictedChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {submittedPrediction.sp500.predictedChange >= 0 ? '+' : ''}{formatNumber(submittedPrediction.sp500.predictedChange, 2)}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 市場終了時間 */}
+          <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 mb-6">
+            <div className="font-semibold text-blue-800 dark:text-blue-300 mb-2">結果確定のタイミング</div>
+            <div className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
+              <div className="flex justify-between">
+                <span>日経平均:</span>
+                <span>本日 15:00（日本時間）</span>
+              </div>
+              <div className="flex justify-between">
+                <span>S&P500:</span>
+                <span>翌朝 6:00（日本時間）</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ランキングリンク */}
+          <div className="border-t dark:border-slate-600 pt-4 mb-4">
+            <Link
+              href="/ranking"
+              className="flex items-center justify-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
+            >
+              <span>参加者のランキングはこちら</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+
+          {/* 閉じるボタン */}
+          <button
+            onClick={() => setShowModal(false)}
+            className="w-full py-3 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 font-semibold rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+          >
+            閉じる
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

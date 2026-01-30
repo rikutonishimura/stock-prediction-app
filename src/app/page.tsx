@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { PredictionForm, ResultCard, StatsPanel, NewsList, StockTicker, StockChart, ThemeToggle } from '@/components';
+import { PredictionForm, ResultCard, StatsPanel, NewsList, StockTicker, StockChart, ThemeToggle, UserMenu } from '@/components';
 import { useStock } from '@/hooks/useStock';
 import { usePredictions } from '@/hooks/usePredictions';
 import { useNews } from '@/hooks/useNews';
@@ -22,7 +22,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'predict' | 'stats'>('predict');
   const { items: japanNews, loading: japanNewsLoading, error: japanNewsError, refetch: refetchJapanNews } = useNews('japan');
   const { items: usNews, loading: usNewsLoading, error: usNewsError, refetch: refetchUsNews } = useNews('us');
-  const { profile, signOut, loading: authLoading } = useAuth();
+  const { user, profile, signOut, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -86,18 +86,21 @@ export default function Home() {
                 </Link>
               </nav>
               <ThemeToggle />
-              {!authLoading && profile && (
-                <div className="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-slate-600">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">
-                    {profile.name} さん
-                  </span>
-                  <button
-                    onClick={handleSignOut}
-                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
-                  >
-                    ログアウト
-                  </button>
-                </div>
+              {authLoading ? (
+                <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-slate-700 animate-pulse" />
+              ) : user ? (
+                <UserMenu
+                  name={profile?.name || user.email?.split('@')[0] || 'User'}
+                  email={user.email || ''}
+                  onSignOut={handleSignOut}
+                />
+              ) : (
+                <Link
+                  href="/login"
+                  className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  ログイン
+                </Link>
               )}
             </div>
           </div>

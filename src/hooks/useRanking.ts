@@ -6,6 +6,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+export interface LatestPrediction {
+  date: string;
+  nikkeiPredictedChange: number | null;
+  sp500PredictedChange: number | null;
+}
+
 export interface RankingUser {
   userId: string;
   userName: string;
@@ -13,6 +19,7 @@ export interface RankingUser {
   totalPredictions: number;
   confirmedPredictions: number;
   directionAccuracy: number;
+  latestPrediction: LatestPrediction | null;
 }
 
 interface RankingData {

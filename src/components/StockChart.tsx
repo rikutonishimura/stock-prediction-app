@@ -189,16 +189,6 @@ export function StockChart() {
             両方
           </button>
           <button
-            onClick={() => setActiveTab('nikkei')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              activeTab === 'nikkei'
-                ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
-            }`}
-          >
-            日経
-          </button>
-          <button
             onClick={() => setActiveTab('sp500')}
             className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
               activeTab === 'sp500'
@@ -207,6 +197,16 @@ export function StockChart() {
             }`}
           >
             S&P
+          </button>
+          <button
+            onClick={() => setActiveTab('nikkei')}
+            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              activeTab === 'nikkei'
+                ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
+            }`}
+          >
+            日経
           </button>
         </div>
       </div>
@@ -236,11 +236,11 @@ export function StockChart() {
             activeTab === 'both' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'
           }`}
         >
-          {(activeTab === 'both' || activeTab === 'nikkei') && nikkei && (
-            <ChartPanel data={nikkei} period={period} color="#dc2626" currency="¥" />
-          )}
           {(activeTab === 'both' || activeTab === 'sp500') && sp500 && (
             <ChartPanel data={sp500} period={period} color="#2563eb" currency="$" />
+          )}
+          {(activeTab === 'both' || activeTab === 'nikkei') && nikkei && (
+            <ChartPanel data={nikkei} period={period} color="#dc2626" currency="¥" />
           )}
         </div>
       )}

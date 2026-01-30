@@ -13,6 +13,12 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+interface LatestPrediction {
+  date: string;
+  nikkeiPredictedChange: number | null;
+  sp500PredictedChange: number | null;
+}
+
 interface RankingUser {
   userId: string;
   userName: string;
@@ -20,6 +26,7 @@ interface RankingUser {
   totalPredictions: number;
   confirmedPredictions: number;
   directionAccuracy: number;
+  latestPrediction: LatestPrediction | null;
 }
 
 export async function GET() {
@@ -56,6 +63,32 @@ export async function GET() {
 
     // プロフィールマップを作成
     const profileMap = new Map(profiles?.map(p => [p.id, p.name]) || []);
+
+    // 今日の日付を取得（日本時間）
+    const today = new Date();
+    const jstOffset = 9 * 60 * 60 * 1000;
+    const jstDate = new Date(today.getTime() + jstOffset);
+    const todayStr = jstDate.toISOString().split('T')[0];
+
+    // 各ユーザーの最新の予測を取得
+    const { data: latestPredictions, error: latestError } = await supabase
+      .from('predictions')
+      .select('user_id, date, nikkei_predicted_change, sp500_predicted_change')
+      .eq('date', todayStr);
+
+    if (latestError) {
+      console.error('Error fetching latest predictions:', latestError);
+    }
+
+    // 最新予測マップを作成
+    const latestPredictionMap = new Map<string, LatestPrediction>();
+    latestPredictions?.forEach(p => {
+      latestPredictionMap.set(p.user_id, {
+        date: p.date,
+        nikkeiPredictedChange: p.nikkei_predicted_change != null ? Number(p.nikkei_predicted_change) : null,
+        sp500PredictedChange: p.sp500_predicted_change != null ? Number(p.sp500_predicted_change) : null,
+      });
+    });
 
     // ユーザーごとの統計を計算
     const userStatsMap = new Map<string, {
@@ -121,6 +154,7 @@ export async function GET() {
         totalPredictions: stats.totalPredictions,
         confirmedPredictions: stats.totalPredictions,
         directionAccuracy: Math.round(directionAccuracy * 10) / 10,
+        latestPrediction: latestPredictionMap.get(userId) || null,
       });
     });
 
