@@ -22,14 +22,22 @@ export interface RankingUser {
   latestPrediction: LatestPrediction | null;
 }
 
+export interface RegisteredUser {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
 interface RankingData {
   rankings: RankingUser[];
   totalUsers: number;
+  registeredUsers: RegisteredUser[];
 }
 
 interface UseRankingReturn {
   rankings: RankingUser[];
   totalUsers: number;
+  registeredUsers: RegisteredUser[];
   loading: boolean;
   error: string | null;
   refetch: () => void;
@@ -38,6 +46,7 @@ interface UseRankingReturn {
 export function useRanking(): UseRankingReturn {
   const [rankings, setRankings] = useState<RankingUser[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
+  const [registeredUsers, setRegisteredUsers] = useState<RegisteredUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,6 +63,7 @@ export function useRanking(): UseRankingReturn {
       const data: RankingData = await response.json();
       setRankings(data.rankings);
       setTotalUsers(data.totalUsers);
+      setRegisteredUsers(data.registeredUsers || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'エラーが発生しました');
     } finally {
@@ -68,6 +78,7 @@ export function useRanking(): UseRankingReturn {
   return {
     rankings,
     totalUsers,
+    registeredUsers,
     loading,
     error,
     refetch: fetchRankings,

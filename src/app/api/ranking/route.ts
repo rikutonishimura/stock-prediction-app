@@ -29,6 +29,12 @@ interface RankingUser {
   latestPrediction: LatestPrediction | null;
 }
 
+interface RegisteredUser {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
 export async function GET() {
   try {
     // 全ユーザーの確定済み予想を取得
@@ -54,7 +60,8 @@ export async function GET() {
     // プロフィール情報を取得
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, name');
+      .select('id, name, created_at')
+      .order('created_at', { ascending: false });
 
     if (profilesError) {
       console.error('Error fetching profiles:', profilesError);
@@ -63,6 +70,13 @@ export async function GET() {
 
     // プロフィールマップを作成
     const profileMap = new Map(profiles?.map(p => [p.id, p.name]) || []);
+
+    // 登録ユーザー一覧を作成
+    const registeredUsers: RegisteredUser[] = (profiles || []).map(p => ({
+      id: p.id,
+      name: p.name || '匿名ユーザー',
+      createdAt: p.created_at,
+    }));
 
     // 今日の日付を取得（日本時間）
     const today = new Date();
@@ -164,6 +178,7 @@ export async function GET() {
     return NextResponse.json({
       rankings: rankings.slice(0, 50), // 上位50人まで
       totalUsers: rankings.length,
+      registeredUsers,
     });
   } catch (error) {
     console.error('Ranking API error:', error);

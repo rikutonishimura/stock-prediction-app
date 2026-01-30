@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useRanking, RankingUser } from '@/hooks/useRanking';
+import { useRanking, RankingUser, RegisteredUser } from '@/hooks/useRanking';
 import { formatNumber } from '@/lib/stats';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -103,8 +103,18 @@ function RankingRow({ rank, user, isCurrentUser }: RankingRowProps) {
 }
 
 export function RankingPanel() {
-  const { rankings, totalUsers, loading, error, refetch } = useRanking();
+  const { rankings, totalUsers, registeredUsers, loading, error, refetch } = useRanking();
   const { user } = useAuth();
+
+  // 日付をフォーマット
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
 
   if (error) {
     return (
@@ -210,6 +220,53 @@ export function RankingPanel() {
               </div>
             </div>
           </div>
+
+          {/* 登録ユーザー一覧 */}
+          {registeredUsers.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-slate-600">
+              <h4 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
+                登録ユーザー一覧
+                <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+                  ({registeredUsers.length}人)
+                </span>
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {registeredUsers.map((regUser) => (
+                  <div
+                    key={regUser.id}
+                    className={`p-3 rounded-lg border ${
+                      user?.id === regUser.id
+                        ? 'border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-blue-900/30'
+                        : 'border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
+                        user?.id === regUser.id ? 'bg-blue-600' : 'bg-gray-500 dark:bg-slate-500'
+                      }`}>
+                        {regUser.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className={`font-medium truncate ${
+                          user?.id === regUser.id ? 'text-blue-600 dark:text-blue-400' : 'text-gray-800 dark:text-white'
+                        }`}>
+                          {regUser.name}
+                          {user?.id === regUser.id && (
+                            <span className="ml-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded">
+                              あなた
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          登録: {formatDate(regUser.createdAt)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
