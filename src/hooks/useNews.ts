@@ -21,12 +21,12 @@ export function useNews(category: NewsCategory): UseNewsResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchNews = useCallback(async () => {
+  const fetchNews = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/news?category=${category}`);
+      const response = await fetch(`/api/news?category=${category}`, { signal });
       const data = await response.json();
 
       if (data.success) {
@@ -35,6 +35,9 @@ export function useNews(category: NewsCategory): UseNewsResult {
         setError(data.error || 'Failed to fetch news');
       }
     } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
@@ -42,7 +45,9 @@ export function useNews(category: NewsCategory): UseNewsResult {
   }, [category]);
 
   useEffect(() => {
-    fetchNews();
+    const controller = new AbortController();
+    fetchNews(controller.signal);
+    return () => controller.abort();
   }, [fetchNews]);
 
   return {

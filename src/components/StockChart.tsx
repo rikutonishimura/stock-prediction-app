@@ -18,6 +18,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { useStockHistory, Period, StockHistoryData } from '@/hooks/useStockHistory';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const PERIOD_LABELS: Record<Period, string> = {
   '1w': '1週間',
@@ -31,9 +32,14 @@ interface ChartPanelProps {
   period: Period;
   color: string;
   currency: string;
+  isDark: boolean;
 }
 
-function ChartPanel({ data, period, color, currency }: ChartPanelProps) {
+function ChartPanel({ data, period, color, currency, isDark }: ChartPanelProps) {
+  // ダークモード用の色設定
+  const tickColor = isDark ? '#ffffff' : '#6b7280';
+  const gridColor = isDark ? '#ffffff' : '#e5e7eb';
+  const lineColor = color; // 常に元の色（青/赤）を使用
   // 日付フォーマット
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -50,6 +56,10 @@ function ChartPanel({ data, period, color, currency }: ChartPanelProps) {
   const formatPrice = (price: number) => {
     if (currency === '¥') {
       return `¥${price.toLocaleString('ja-JP', { maximumFractionDigits: 0 })}`;
+    }
+    if (currency === '円') {
+      // ドル円用（通貨ペア）
+      return `${price.toLocaleString('ja-JP', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}円`;
     }
     return `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
@@ -92,24 +102,28 @@ function ChartPanel({ data, period, color, currency }: ChartPanelProps) {
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
             <XAxis
               dataKey="formattedDate"
-              tick={{ fontSize: 10, fill: '#6b7280' }}
+              tick={{ fontSize: 10, fill: tickColor }}
               tickLine={false}
-              axisLine={{ stroke: '#e5e7eb' }}
+              axisLine={{ stroke: gridColor }}
               interval="preserveStartEnd"
             />
             <YAxis
               domain={[minPrice - padding, maxPrice + padding]}
-              tick={{ fontSize: 10, fill: '#6b7280' }}
+              tick={{ fontSize: 10, fill: tickColor }}
               tickLine={false}
-              axisLine={{ stroke: '#e5e7eb' }}
-              tickFormatter={(value) =>
-                currency === '¥'
-                  ? `${(value / 1000).toFixed(0)}k`
-                  : value.toFixed(0)
-              }
+              axisLine={{ stroke: gridColor }}
+              tickFormatter={(value) => {
+                if (currency === '¥') {
+                  return `${(value / 1000).toFixed(0)}k`;
+                }
+                if (currency === '円') {
+                  return value.toFixed(1);
+                }
+                return value.toFixed(0);
+              }}
               width={45}
             />
             <Tooltip
@@ -131,10 +145,10 @@ function ChartPanel({ data, period, color, currency }: ChartPanelProps) {
             <Line
               type="monotone"
               dataKey="price"
-              stroke={color}
+              stroke={lineColor}
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, fill: color }}
+              activeDot={{ r: 4, fill: lineColor }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -143,9 +157,20 @@ function ChartPanel({ data, period, color, currency }: ChartPanelProps) {
   );
 }
 
+type ChartType = 'both' | 'nikkei' | 'sp500' | 'gold' | 'usdjpy';
+
+const CHART_CONFIG: Record<ChartType, { label: string; color: string; currency: string }> = {
+  both: { label: '両方', color: '', currency: '' },
+  sp500: { label: 'S&P', color: '#2563eb', currency: '$' },
+  nikkei: { label: '日経', color: '#dc2626', currency: '¥' },
+  gold: { label: 'ゴールド', color: '#f59e0b', currency: '$' },
+  usdjpy: { label: 'ドル円', color: '#10b981', currency: '円' },
+};
+
 export function StockChart() {
-  const { nikkei, sp500, loading, error, period, setPeriod } = useStockHistory('3m');
-  const [activeTab, setActiveTab] = useState<'both' | 'nikkei' | 'sp500'>('both');
+  const { nikkei, sp500, gold, usdjpy, loading, error, period, setPeriod } = useStockHistory('3m');
+  const [activeTab, setActiveTab] = useState<ChartType>('both');
+  const { isDark } = useTheme();
 
   if (error) {
     return (
@@ -155,10 +180,12 @@ export function StockChart() {
     );
   }
 
+  const chartTypes: ChartType[] = ['both', 'sp500', 'nikkei', 'gold', 'usdjpy'];
+
   return (
     <div className="space-y-4">
       {/* 期間選択タブ */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-wrap justify-between items-center gap-2">
         <div className="flex gap-1 bg-gray-100 dark:bg-slate-700 rounded-lg p-1">
           {(Object.entries(PERIOD_LABELS) as [Period, string][]).map(([key, label]) => (
             <button
@@ -178,36 +205,19 @@ export function StockChart() {
 
         {/* 表示切り替え */}
         <div className="flex gap-1 bg-gray-100 dark:bg-slate-700 rounded-lg p-1">
-          <button
-            onClick={() => setActiveTab('both')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              activeTab === 'both'
-                ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
-            }`}
-          >
-            両方
-          </button>
-          <button
-            onClick={() => setActiveTab('sp500')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              activeTab === 'sp500'
-                ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
-            }`}
-          >
-            S&P
-          </button>
-          <button
-            onClick={() => setActiveTab('nikkei')}
-            className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-              activeTab === 'nikkei'
-                ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
-                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
-            }`}
-          >
-            日経
-          </button>
+          {chartTypes.map((type) => (
+            <button
+              key={type}
+              onClick={() => setActiveTab(type)}
+              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                activeTab === type
+                  ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
+              }`}
+            >
+              {CHART_CONFIG[type].label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -237,10 +247,16 @@ export function StockChart() {
           }`}
         >
           {(activeTab === 'both' || activeTab === 'sp500') && sp500 && (
-            <ChartPanel data={sp500} period={period} color="#2563eb" currency="$" />
+            <ChartPanel data={sp500} period={period} color={CHART_CONFIG.sp500.color} currency={CHART_CONFIG.sp500.currency} isDark={isDark} />
           )}
           {(activeTab === 'both' || activeTab === 'nikkei') && nikkei && (
-            <ChartPanel data={nikkei} period={period} color="#dc2626" currency="¥" />
+            <ChartPanel data={nikkei} period={period} color={CHART_CONFIG.nikkei.color} currency={CHART_CONFIG.nikkei.currency} isDark={isDark} />
+          )}
+          {activeTab === 'gold' && gold && (
+            <ChartPanel data={gold} period={period} color={CHART_CONFIG.gold.color} currency={CHART_CONFIG.gold.currency} isDark={isDark} />
+          )}
+          {activeTab === 'usdjpy' && usdjpy && (
+            <ChartPanel data={usdjpy} period={period} color={CHART_CONFIG.usdjpy.color} currency={CHART_CONFIG.usdjpy.currency} isDark={isDark} />
           )}
         </div>
       )}

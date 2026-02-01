@@ -29,12 +29,12 @@ export function useStock(): UseStockReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/stock');
+      const response = await fetch('/api/stock', { signal });
       const result = await response.json();
 
       if (!result.success) {
@@ -43,6 +43,9 @@ export function useStock(): UseStockReturn {
 
       setData(result.data);
     } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
@@ -50,7 +53,9 @@ export function useStock(): UseStockReturn {
   }, []);
 
   useEffect(() => {
-    fetchData();
+    const controller = new AbortController();
+    fetchData(controller.signal);
+    return () => controller.abort();
   }, [fetchData]);
 
   return { data, loading, error, refetch: fetchData };

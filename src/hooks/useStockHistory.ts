@@ -26,6 +26,8 @@ export interface StockHistoryData {
 interface UseStockHistoryReturn {
   nikkei: StockHistoryData | null;
   sp500: StockHistoryData | null;
+  gold: StockHistoryData | null;
+  usdjpy: StockHistoryData | null;
   loading: boolean;
   error: string | null;
   period: Period;
@@ -36,25 +38,32 @@ interface UseStockHistoryReturn {
 export function useStockHistory(initialPeriod: Period = '3m'): UseStockHistoryReturn {
   const [nikkei, setNikkei] = useState<StockHistoryData | null>(null);
   const [sp500, setSp500] = useState<StockHistoryData | null>(null);
+  const [gold, setGold] = useState<StockHistoryData | null>(null);
+  const [usdjpy, setUsdjpy] = useState<StockHistoryData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<Period>(initialPeriod);
 
-  const fetchHistory = useCallback(async () => {
+  const fetchHistory = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/stock/history?period=${period}`);
+      const response = await fetch(`/api/stock/history?period=${period}`, { signal });
       const result = await response.json();
 
       if (result.success) {
         setNikkei(result.data.nikkei);
         setSp500(result.data.sp500);
+        setGold(result.data.gold);
+        setUsdjpy(result.data.usdjpy);
       } else {
         setError(result.error || 'Failed to fetch stock history');
       }
     } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
       setError('ネットワークエラーが発生しました');
       console.error('Stock history fetch error:', err);
     } finally {
@@ -63,12 +72,16 @@ export function useStockHistory(initialPeriod: Period = '3m'): UseStockHistoryRe
   }, [period]);
 
   useEffect(() => {
-    fetchHistory();
+    const controller = new AbortController();
+    fetchHistory(controller.signal);
+    return () => controller.abort();
   }, [fetchHistory]);
 
   return {
     nikkei,
     sp500,
+    gold,
+    usdjpy,
     loading,
     error,
     period,

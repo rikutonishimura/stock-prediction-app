@@ -50,12 +50,12 @@ export function useRanking(): UseRankingReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRankings = useCallback(async () => {
+  const fetchRankings = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/ranking');
+      const response = await fetch('/api/ranking', { signal });
       if (!response.ok) {
         throw new Error('ランキングの取得に失敗しました');
       }
@@ -65,6 +65,9 @@ export function useRanking(): UseRankingReturn {
       setTotalUsers(data.totalUsers);
       setRegisteredUsers(data.registeredUsers || []);
     } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
       setError(err instanceof Error ? err.message : 'エラーが発生しました');
     } finally {
       setLoading(false);
@@ -72,7 +75,9 @@ export function useRanking(): UseRankingReturn {
   }, []);
 
   useEffect(() => {
-    fetchRankings();
+    const controller = new AbortController();
+    fetchRankings(controller.signal);
+    return () => controller.abort();
   }, [fetchRankings]);
 
   return {
