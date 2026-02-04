@@ -35,14 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const supabase = createClient();
     let isMounted = true;
-
-    // タイムアウト: 5秒後に強制的にローディング解除
-    const timeoutId = setTimeout(() => {
-      if (isMounted && loading) {
-        console.warn('Auth session check timed out');
-        setLoading(false);
-      }
-    }, 5000);
+    let retryCount = 0;
+    const maxRetries = 3;
 
     // プロフィールを取得
     const fetchProfile = async (userId: string) => {
@@ -60,20 +54,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    // 現在のセッションを取得
-    const getSession = async () => {
+    // 現在のセッションを取得（リトライ付き）
+    const getSession = async (): Promise<void> => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) {
+          throw error;
+        }
+
         if (isMounted) {
           setUser(session?.user ?? null);
           if (session?.user) {
             await fetchProfile(session.user.id);
           }
+          setLoading(false);
         }
       } catch (error) {
         console.error('Failed to get session:', error);
-      } finally {
-        clearTimeout(timeoutId);
+
+        // リトライ
+        if (retryCount < maxRetries && isMounted) {
+          retryCount++;
+          console.log(`Retrying session check (${retryCount}/${maxRetries})...`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          return getSession();
+        }
+
         if (isMounted) {
           setLoading(false);
         }
@@ -84,13 +91,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // 認証状態の変更を監視
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event: AuthChangeEvent, session: Session | null) => {
+      async (event: AuthChangeEvent, session: Session | null) => {
         if (isMounted) {
+          console.log('Auth state changed:', event);
           setUser(session?.user ?? null);
+
           if (session?.user) {
             await fetchProfile(session.user.id);
           } else {
             setProfile(null);
+          }
+
+          // TOKEN_REFRESHED イベントでセッションが更新された場合
+          if (event === 'TOKEN_REFRESHED' && session?.user) {
+            console.log('Session token refreshed');
           }
         }
       }
@@ -98,7 +112,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       isMounted = false;
-      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);
@@ -132,7 +145,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (error) {
-      return { error: error.message };
+      // エラーメッセージを日本語化
+      let errorMessage = error.message;
+      if (error.message.includes('Email not confirmed')) {
+        errorMessage = 'メールアドレスが確認されていません。サインアップ時に届いたメール内のリンクをクリックしてください。';
+      } else if (error.message.includes('Invalid login credentials')) {
+        errorMessage = 'メールアドレスまたはパスワードが正しくありません。';
+      } else if (error.message.includes('Too many requests')) {
+        errorMessage = 'リクエストが多すぎます。しばらく待ってから再度お試しください。';
+      }
+      return { error: errorMessage };
     }
 
     return { error: null };
