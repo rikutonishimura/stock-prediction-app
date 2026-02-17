@@ -89,6 +89,17 @@
   color: #E57373 !important;
 }
 
+/* 結果を確定ボタン（ダークモード：ティッカーと同じ配色） */
+.dark .confirm-result-btn {
+  color: #81C784 !important;
+  background-color: rgba(129, 199, 132, 0.15) !important;
+  border: none !important;
+}
+
+.dark .confirm-result-btn:hover {
+  background-color: rgba(129, 199, 132, 0.25) !important;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

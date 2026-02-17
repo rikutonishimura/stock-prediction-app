@@ -190,7 +190,7 @@ export default function Home() {
                 className={`px-6 py-2 rounded-md font-medium transition-colors ${
                   activeTab === 'predict'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
+                    : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
                 }`}
               >
                 予想入力
@@ -200,7 +200,7 @@ export default function Home() {
                 className={`px-6 py-2 rounded-md font-medium transition-colors ${
                   activeTab === 'stats'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
+                    : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
                 }`}
               >
                 統計
