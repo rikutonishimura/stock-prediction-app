@@ -182,7 +182,7 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
             }}
             className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
               inputMode === 'price'
-                ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
             }`}
           >
@@ -197,7 +197,7 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
             }}
             className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
               inputMode === 'percent'
-                ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
             }`}
           >
@@ -297,7 +297,7 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
       <button
         type="submit"
         disabled={disabled || isSubmitting || !stockData?.nikkei || !stockData?.sp500}
-        className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors"
+        className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-slate-700 dark:disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
       >
         {disabled ? '本日は入力済みです' : isSubmitting ? '登録中...' : '予想を登録'}
       </button>

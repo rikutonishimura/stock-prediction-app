@@ -152,7 +152,7 @@ function SingleResult({
             {onConfirm && (
               <button
                 onClick={onConfirm}
-                className="mt-2 w-full py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
+                className="mt-2 w-full py-2 bg-green-600 dark:bg-green-700 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 transition-colors text-sm"
               >
                 結果を確定
               </button>

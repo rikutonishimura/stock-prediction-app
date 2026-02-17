@@ -152,9 +152,9 @@ export default function Home() {
           {/* 中央：メインコンテンツ */}
           <div className="order-2 lg:order-2">
             {/* 使い方 */}
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg mb-6">
+            <div className="p-4 bg-blue-50 dark:bg-slate-800 border dark:border-slate-700 rounded-lg mb-6">
               <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">使い方</h3>
-              <ol className="list-decimal list-inside space-y-1 text-sm text-blue-700 dark:text-blue-400">
+              <ol className="list-decimal list-inside space-y-1 text-sm text-blue-700 dark:text-gray-400">
                 <li>朝、予想変化率を入力して「予想を登録」をクリック</li>
                 <li>市場終了後、「結果を確定」ボタンで実際の値を記録</li>
                 <li>統計タブで乖離の推移を確認し、予測精度を改善</li>
@@ -190,7 +190,7 @@ export default function Home() {
                 className={`px-6 py-2 rounded-md font-medium transition-colors ${
                   activeTab === 'predict'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-white dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-600'
+                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
                 }`}
               >
                 予想入力
@@ -200,7 +200,7 @@ export default function Home() {
                 className={`px-6 py-2 rounded-md font-medium transition-colors ${
                   activeTab === 'stats'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-white dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-600'
+                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
                 }`}
               >
                 統計

@@ -139,10 +139,11 @@ function ChartPanel({ data, period, color, currency, isDark }: ChartPanelProps) 
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid #e5e7eb',
+                backgroundColor: isDark ? '#1E1E1E' : 'white',
+                border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e5e7eb',
                 borderRadius: '8px',
                 fontSize: '12px',
+                color: isDark ? '#E0E0E0' : '#374151',
               }}
               formatter={(value) => [formatPrice(value as number), '価格']}
               labelFormatter={(label) => label}
@@ -206,7 +207,7 @@ export function StockChart() {
               disabled={loading}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 period === key
-                  ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm'
                   : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
               } disabled:opacity-50`}
             >
@@ -223,7 +224,7 @@ export function StockChart() {
               onClick={() => setActiveTab(type)}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                 activeTab === type
-                  ? 'bg-white dark:bg-slate-600 text-blue-600 dark:text-blue-400 shadow-sm'
+                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm'
                   : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white'
               }`}
             >
