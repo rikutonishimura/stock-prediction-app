@@ -23,6 +23,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  updateProfile: (name: string) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -163,8 +164,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
   };
 
+  // プロフィール更新
+  const updateProfile = async (name: string) => {
+    if (!user) return { error: 'ログインしていません' };
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('profiles')
+      .update({ name })
+      .eq('id', user.id);
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    setProfile(prev => prev ? { ...prev, name } : null);
+    return { error: null };
+  };
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

@@ -27,19 +27,25 @@ export function useNews(category: NewsCategory): UseNewsResult {
 
     try {
       const response = await fetch(`/api/news?category=${category}`, { signal });
+      if (signal?.aborted) return;
       const data = await response.json();
+      if (signal?.aborted) return;
 
       if (data.success) {
         setItems(data.items);
       } else {
         setError(data.error || 'Failed to fetch news');
       }
+      setLoading(false);
     } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
+      // AbortErrorは無視（コンポーネントのアンマウント時など）
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return;
+      }
+      if (signal?.aborted) {
         return;
       }
       setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
       setLoading(false);
     }
   }, [category]);
@@ -47,13 +53,13 @@ export function useNews(category: NewsCategory): UseNewsResult {
   useEffect(() => {
     const controller = new AbortController();
     fetchNews(controller.signal);
-    return () => controller.abort();
+    return () => controller.abort('component unmounted');
   }, [fetchNews]);
 
   return {
     items,
     loading,
     error,
-    refetch: fetchNews,
+    refetch: () => fetchNews(),
   };
 }

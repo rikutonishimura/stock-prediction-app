@@ -22,7 +22,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'predict' | 'stats'>('predict');
   const { items: japanNews, loading: japanNewsLoading, error: japanNewsError, refetch: refetchJapanNews } = useNews('japan');
   const { items: usNews, loading: usNewsLoading, error: usNewsError, refetch: refetchUsNews } = useNews('us');
-  const { user, profile, signOut, loading: authLoading } = useAuth();
+  const { user, profile, signOut, updateProfile, loading: authLoading } = useAuth();
   const router = useRouter();
 
   // 未ログイン時はログインページにリダイレクト
@@ -50,8 +50,10 @@ export default function Home() {
   };
 
   const handleSubmit = async (input: PredictionInput) => {
-    await add(input);
-    refresh();
+    const result = await add(input);
+    if (!result) {
+      throw new Error('予想の登録に失敗しました。コンソールで詳細を確認してください。');
+    }
   };
 
   const handleUpdateResult = async (
@@ -78,61 +80,65 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 via-blue-50 to-slate-100 main-bg-dark">
-      {/* ヘッダー */}
-      <header className="bg-white dark:bg-slate-800 shadow-sm">
-        <div className="w-full px-4 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">株価予測トレーニング</h1>
-            <div className="flex items-center gap-6">
-              <nav className="flex gap-4">
-                <Link
-                  href="/"
-                  className="text-blue-600 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300"
-                >
-                  ホーム
-                </Link>
-                <Link
-                  href="/history"
-                  className="text-gray-600 dark:text-gray-300 font-medium hover:text-gray-800 dark:hover:text-white"
-                >
-                  履歴
-                </Link>
-                <Link
-                  href="/ranking"
-                  className="text-gray-600 dark:text-gray-300 font-medium hover:text-gray-800 dark:hover:text-white"
-                >
-                  ランキング
-                </Link>
-              </nav>
-              <ThemeToggle />
-              {authLoading ? (
-                <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-slate-700 animate-pulse" />
-              ) : user ? (
-                <UserMenu
-                  name={profile?.name || user.email?.split('@')[0] || 'User'}
-                  email={user.email || ''}
-                  onSignOut={handleSignOut}
-                />
-              ) : null}
+      {/* ヘッダー + ティッカー固定エリア */}
+      <div className="sticky top-0 z-50">
+        {/* ヘッダー */}
+        <header className="bg-white dark:bg-slate-800 shadow-sm">
+          <div className="w-full px-4 lg:px-8 py-4">
+            <div className="flex justify-between items-center">
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">株価予測トレーニング</h1>
+              <div className="flex items-center gap-6">
+                <nav className="flex gap-4">
+                  <Link
+                    href="/"
+                    className="text-blue-600 dark:text-blue-400 font-medium hover:text-blue-800 dark:hover:text-blue-300"
+                  >
+                    ホーム
+                  </Link>
+                  <Link
+                    href="/history"
+                    className="text-gray-600 dark:text-gray-300 font-medium hover:text-gray-800 dark:hover:text-white"
+                  >
+                    履歴
+                  </Link>
+                  <Link
+                    href="/ranking"
+                    className="text-gray-600 dark:text-gray-300 font-medium hover:text-gray-800 dark:hover:text-white"
+                  >
+                    ランキング
+                  </Link>
+                </nav>
+                <ThemeToggle />
+                {authLoading ? (
+                  <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-slate-700 animate-pulse" />
+                ) : user ? (
+                  <UserMenu
+                    name={profile?.name || user.email?.split('@')[0] || 'User'}
+                    email={user.email || ''}
+                    onSignOut={handleSignOut}
+                    onUpdateName={updateProfile}
+                  />
+                ) : null}
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* 株価ティッカー */}
-      <StockTicker
-        nikkeiPrice={stockData?.nikkei?.price}
-        nikkeiChange={stockData?.nikkei?.changePercent}
-        sp500Price={stockData?.sp500?.price}
-        sp500Change={stockData?.sp500?.changePercent}
-      />
+        {/* 株価ティッカー */}
+        <StockTicker
+          nikkeiPrice={stockData?.nikkei?.price}
+          nikkeiChange={stockData?.nikkei?.changePercent}
+          sp500Price={stockData?.sp500?.price}
+          sp500Change={stockData?.sp500?.changePercent}
+        />
+      </div>
 
       <main className="w-full px-4 lg:px-8 py-8">
         {/* 3カラムグリッドレイアウト: 左1 : 中央1.5 : 右1 */}
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] xl:grid-cols-[1fr_1.5fr_1fr] gap-6">
           {/* 左側：米国経済ニュース（xl以上で表示） */}
           <div className="hidden xl:block order-1">
-            <div className="sticky top-4 h-[calc(100vh-8rem)]">
+            <div className="sticky top-[6.5rem] h-[calc(100vh-10rem)]">
               <NewsList
                 items={usNews}
                 loading={usNewsLoading}
@@ -145,34 +151,32 @@ export default function Home() {
 
           {/* 中央：メインコンテンツ */}
           <div className="order-2 lg:order-2">
-            {/* 日付表示 */}
-            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4 mb-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">今日の日付</div>
-                  <div className="text-lg font-semibold dark:text-white">
-                    {new Date().toLocaleDateString('ja-JP', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      weekday: 'long',
-                    })}
-                  </div>
-                </div>
-                <button
-                  onClick={refetch}
-                  disabled={stockLoading}
-                  className="px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors text-sm"
-                >
-                  {stockLoading ? '更新中...' : '株価を更新'}
-                </button>
-              </div>
-              {stockError && (
-                <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md text-sm">
-                  株価の取得に失敗しました: {stockError}
-                </div>
-              )}
+            {/* 使い方 */}
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg mb-6">
+              <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">使い方</h3>
+              <ol className="list-decimal list-inside space-y-1 text-sm text-blue-700 dark:text-blue-400">
+                <li>朝、予想変化率を入力して「予想を登録」をクリック</li>
+                <li>市場終了後、「結果を確定」ボタンで実際の値を記録</li>
+                <li>統計タブで乖離の推移を確認し、予測精度を改善</li>
+              </ol>
             </div>
+
+            {/* 株価更新ボタン */}
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={refetch}
+                disabled={stockLoading}
+                className="px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors text-sm"
+              >
+                {stockLoading ? '更新中...' : '株価を更新'}
+              </button>
+            </div>
+
+            {stockError && (
+              <div className="mb-6 p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md text-sm">
+                株価の取得に失敗しました: {stockError}
+              </div>
+            )}
 
             {/* 株価チャート */}
             <div className="mb-6">
@@ -241,20 +245,11 @@ export default function Home() {
               <StatsPanel stats={stats} />
             )}
 
-            {/* クイック情報 */}
-            <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-              <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">使い方</h3>
-              <ol className="list-decimal list-inside space-y-1 text-sm text-blue-700 dark:text-blue-400">
-                <li>朝、予想変化率を入力して「予想を登録」をクリック</li>
-                <li>市場終了後、「結果を確定」ボタンで実際の値を記録</li>
-                <li>統計タブで乖離の推移を確認し、予測精度を改善</li>
-              </ol>
-            </div>
           </div>
 
           {/* 右側：日本経済ニュース（lg以上で表示） */}
           <div className="hidden lg:block order-3">
-            <div className="sticky top-4 h-[calc(100vh-8rem)]">
+            <div className="sticky top-[6.5rem] h-[calc(100vh-10rem)]">
               <NewsList
                 items={japanNews}
                 loading={japanNewsLoading}

@@ -6,41 +6,87 @@
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #f1f5f9;
+  --background: #121212;
+  --foreground: #E0E0E0;
 }
 
-/* ダークモード: メイン背景（濃いグレー） */
+/* ダークモード: メイン背景（深いダークグレー） */
 .dark .main-bg-dark {
-  background: #454545 !important;
+  background: #121212 !important;
 }
 
-/* ダークモード: テキストを白色に */
-.dark .main-bg-dark .dark\:text-white,
-.dark .main-bg-dark .dark\:text-gray-100,
-.dark .main-bg-dark .dark\:text-gray-200,
-.dark .main-bg-dark .dark\:text-gray-300,
+/* ダークモード: テキスト（少しグレーを混ぜて目に優しく） */
+.dark .main-bg-dark .dark\:text-white {
+  color: #E0E0E0 !important;
+}
+
+.dark .main-bg-dark .dark\:text-gray-100 {
+  color: #E0E0E0 !important;
+}
+
+.dark .main-bg-dark .dark\:text-gray-200 {
+  color: #BDBDBD !important;
+}
+
+.dark .main-bg-dark .dark\:text-gray-300 {
+  color: #9E9E9E !important;
+}
+
 .dark .main-bg-dark .dark\:text-gray-400 {
-  color: #ffffff !important;
+  color: #757575 !important;
 }
 
-/* ダークモード: 入力欄のplaceholderを黒色に */
+/* ダークモード: 見出しの青色をパステル調に */
+.dark .main-bg-dark .dark\:text-blue-400 {
+  color: #90CAF9 !important;
+}
+
+.dark .main-bg-dark .dark\:text-blue-300 {
+  color: #90CAF9 !important;
+}
+
+/* ダークモード: 入力欄のスタイル */
 .dark .main-bg-dark input::placeholder {
-  color: #333333 !important;
+  color: #757575 !important;
 }
 
-/* ダークモード: カード背景を明るめに */
+.dark .main-bg-dark input,
+.dark .main-bg-dark input.dark\:text-white {
+  color: #E0E0E0 !important;
+  caret-color: #E0E0E0 !important;
+  background-color: #2C2C2C !important;
+}
+
+/* ダークモード: カード背景（背景より少し明るく浮き上がらせる） */
 .dark .main-bg-dark .dark\:bg-slate-800 {
-  background-color: #b0b0b0 !important;
+  background-color: #1E1E1E !important;
 }
 
 .dark .main-bg-dark .dark\:bg-slate-700 {
-  background-color: #a8a8a8 !important;
+  background-color: #2C2C2C !important;
+}
+
+/* ダークモード: ボーダー */
+.dark .main-bg-dark .dark\:border-slate-700 {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .main-bg-dark .dark\:border-slate-600 {
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 /* ダークモード: 記事タイトルを少し太字に */
 .dark .main-bg-dark .dark\:text-gray-100 {
   font-weight: 600 !important;
+}
+
+/* ダークモード: 緑と赤の彩度を少し落とす */
+.dark .main-bg-dark .dark\:text-green-400 {
+  color: #81C784 !important;
+}
+
+.dark .main-bg-dark .dark\:text-red-400 {
+  color: #E57373 !important;
 }
 
 @theme inline {
@@ -63,7 +109,7 @@ body {
 }
 
 .dark .scrollbar-thin {
-  scrollbar-color: #475569 transparent;
+  scrollbar-color: #424242 transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -80,7 +126,7 @@ body {
 }
 
 .dark .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: #475569;
+  background-color: #424242;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
@@ -88,7 +134,7 @@ body {
 }
 
 .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: #64748b;
+  background-color: #616161;
 }
 
 /* 株価ティッカー */
@@ -114,19 +160,19 @@ body {
   gap: 8px;
   padding: 0 24px;
   white-space: nowrap;
-  border-right: 1px solid #374151;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .ticker-name {
   font-weight: 600;
   font-size: 13px;
-  color: #9ca3af;
+  color: #9E9E9E;
 }
 
 .ticker-price {
   font-size: 14px;
   font-weight: 700;
-  color: #ffffff;
+  color: #E0E0E0;
 }
 
 .ticker-change {
@@ -137,13 +183,13 @@ body {
 }
 
 .ticker-change.positive {
-  color: #10b981;
-  background-color: rgba(16, 185, 129, 0.15);
+  color: #81C784;
+  background-color: rgba(129, 199, 132, 0.15);
 }
 
 .ticker-change.negative {
-  color: #ef4444;
-  background-color: rgba(239, 68, 68, 0.15);
+  color: #E57373;
+  background-color: rgba(229, 115, 115, 0.15);
 }
 
 @keyframes ticker-scroll {

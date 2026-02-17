@@ -106,18 +106,18 @@ export function StatsPanel({ stats }: StatsPanelProps) {
       {/* 精度の目安 */}
       <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
         <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">乖離の目安</h4>
-        <div className="grid grid-cols-3 gap-2 text-sm dark:text-gray-300">
+        <div className="grid grid-cols-3 gap-2 text-sm">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-green-500"></span>
-            <span>0.5以下: 優秀</span>
+            <span style={{ color: 'var(--tw-dark-mode, #374151)' }} className="text-gray-700 dark:!text-black">0.5以下: 優秀</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
-            <span>0.5-1.0: 普通</span>
+            <span style={{ color: 'var(--tw-dark-mode, #374151)' }} className="text-gray-700 dark:!text-black">0.5-1.0: 普通</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-red-500"></span>
-            <span>1.0以上: 要改善</span>
+            <span style={{ color: 'var(--tw-dark-mode, #374151)' }} className="text-gray-700 dark:!text-black">1.0以上: 要改善</span>
           </div>
         </div>
       </div>

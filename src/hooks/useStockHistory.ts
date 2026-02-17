@@ -50,7 +50,9 @@ export function useStockHistory(initialPeriod: Period = '3m'): UseStockHistoryRe
 
     try {
       const response = await fetch(`/api/stock/history?period=${period}`, { signal });
+      if (signal?.aborted) return;
       const result = await response.json();
+      if (signal?.aborted) return;
 
       if (result.success) {
         setNikkei(result.data.nikkei);
@@ -60,13 +62,17 @@ export function useStockHistory(initialPeriod: Period = '3m'): UseStockHistoryRe
       } else {
         setError(result.error || 'Failed to fetch stock history');
       }
+      setLoading(false);
     } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
+      // AbortErrorは無視（コンポーネントのアンマウント時など）
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return;
+      }
+      if (signal?.aborted) {
         return;
       }
       setError('ネットワークエラーが発生しました');
       console.error('Stock history fetch error:', err);
-    } finally {
       setLoading(false);
     }
   }, [period]);
@@ -74,7 +80,7 @@ export function useStockHistory(initialPeriod: Period = '3m'): UseStockHistoryRe
   useEffect(() => {
     const controller = new AbortController();
     fetchHistory(controller.signal);
-    return () => controller.abort();
+    return () => controller.abort('component unmounted');
   }, [fetchHistory]);
 
   return {
@@ -86,6 +92,6 @@ export function useStockHistory(initialPeriod: Period = '3m'): UseStockHistoryRe
     error,
     period,
     setPeriod,
-    refetch: fetchHistory,
+    refetch: () => fetchHistory(),
   };
 }

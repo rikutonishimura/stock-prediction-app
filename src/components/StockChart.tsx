@@ -47,8 +47,8 @@ function ChartPanel({ data, period, color, currency, isDark }: ChartPanelProps) 
   }, []);
 
   // ダークモード用の色設定
-  const tickColor = isDark ? '#ffffff' : '#6b7280';
-  const gridColor = isDark ? '#ffffff' : '#e5e7eb';
+  const tickColor = isDark ? '#9E9E9E' : '#6b7280';
+  const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : '#e5e7eb';
   const lineColor = color; // 常に元の色（青/赤）を使用
   // 日付フォーマット
   const formatDate = (dateStr: string) => {

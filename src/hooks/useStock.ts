@@ -35,19 +35,25 @@ export function useStock(): UseStockReturn {
 
     try {
       const response = await fetch('/api/stock', { signal });
+      if (signal?.aborted) return;
       const result = await response.json();
+      if (signal?.aborted) return;
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch stock data');
       }
 
       setData(result.data);
+      setLoading(false);
     } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
+      // AbortErrorは無視（コンポーネントのアンマウント時など）
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return;
+      }
+      if (signal?.aborted) {
         return;
       }
       setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
       setLoading(false);
     }
   }, []);
@@ -55,8 +61,8 @@ export function useStock(): UseStockReturn {
   useEffect(() => {
     const controller = new AbortController();
     fetchData(controller.signal);
-    return () => controller.abort();
+    return () => controller.abort('component unmounted');
   }, [fetchData]);
 
-  return { data, loading, error, refetch: fetchData };
+  return { data, loading, error, refetch: () => fetchData() };
 }

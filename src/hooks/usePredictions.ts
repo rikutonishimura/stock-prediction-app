@@ -107,13 +107,23 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
     loadData();
   }, [loadData]);
 
-  // 自動確定処理
+  // 自動確定処理（株価データが更新されたときのみ実行）
+  const autoConfirmRunRef = useRef(false);
   useEffect(() => {
     if (!user || !stockData?.nikkei?.changePercent || !stockData?.sp500?.changePercent) {
+      autoConfirmRunRef.current = false;
       return;
     }
 
+    // 既に実行済みの場合はスキップ（株価データが同じ間は1回だけ実行）
+    if (autoConfirmRunRef.current) {
+      return;
+    }
+    autoConfirmRunRef.current = true;
+
     const processAutoConfirm = async () => {
+      let hasUpdates = false;
+
       for (const record of pendingPredictions) {
         // 既に処理済みの場合はスキップ
         if (autoConfirmProcessedRef.current.has(record.id)) {
@@ -133,22 +143,25 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
             setPredictions((prev) =>
               prev.map((p) => (p.id === record.id ? updated : p))
             );
+            hasUpdates = true;
             console.log(`[自動確定] ${record.date} の予想を自動確定しました`);
           }
         }
       }
 
-      // 再読み込み
-      const [today, pending] = await Promise.all([
-        getTodayPrediction(user.id),
-        getPendingPredictions(user.id),
-      ]);
-      setTodayPrediction(today);
-      setPendingPredictions(pending);
+      // 更新があった場合のみ再読み込み
+      if (hasUpdates) {
+        const [today, pending] = await Promise.all([
+          getTodayPrediction(user.id),
+          getPendingPredictions(user.id),
+        ]);
+        setTodayPrediction(today);
+        setPendingPredictions(pending);
+      }
     };
 
     processAutoConfirm();
-  }, [user, stockData, pendingPredictions]);
+  }, [user, stockData]);
 
   const add = useCallback(async (input: PredictionInput): Promise<PredictionRecord | null> => {
     if (!user) return null;
@@ -157,8 +170,8 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
     if (newRecord) {
       setPredictions(prev => [newRecord, ...prev]);
       setTodayPrediction(newRecord);
-      const pending = await getPendingPredictions(user.id);
-      setPendingPredictions(pending);
+      // 新規追加したレコードは未確定なので、ローカルstateに直接追加（追加のAPI呼び出しを避ける）
+      setPendingPredictions(prev => [newRecord, ...prev]);
     }
     return newRecord;
   }, [user]);

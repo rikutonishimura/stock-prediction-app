@@ -204,19 +204,19 @@ export function RankingPanel() {
 
           {/* 凡例 */}
           <div className="mt-4 p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
-            <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-2 text-sm">乖離の目安</h4>
+            <h4 className="font-semibold text-gray-700 dark:text-gray-400 mb-2 text-sm">乖離の目安</h4>
             <div className="flex flex-wrap gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                <span className="text-gray-600 dark:text-gray-300">0.5以下: 優秀</span>
+                <span className="text-gray-600 dark:text-gray-400">0.5以下: 優秀</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
-                <span className="text-gray-600 dark:text-gray-300">0.5-1.0: 普通</span>
+                <span className="text-gray-600 dark:text-gray-400">0.5-1.0: 普通</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-red-500"></span>
-                <span className="text-gray-600 dark:text-gray-300">1.0以上: 要改善</span>
+                <span className="text-gray-600 dark:text-gray-400">1.0以上: 要改善</span>
               </div>
             </div>
           </div>

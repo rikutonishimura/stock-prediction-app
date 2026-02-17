@@ -16,7 +16,6 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const { signUp } = useAuth();
   const router = useRouter();
 
@@ -27,6 +26,12 @@ export default function SignupPage() {
     // バリデーション
     if (!name.trim()) {
       setError('名前を入力してください');
+      return;
+    }
+
+    // メールアドレスのドメイン制限
+    if (!email.toLowerCase().endsWith('@monstar-lab.com')) {
+      setError('@monstar-lab.com のメールアドレスのみ登録可能です');
       return;
     }
 
@@ -50,35 +55,10 @@ export default function SignupPage() {
       return;
     }
 
-    setSuccess(true);
+    // メール認証なしのため、サインアップ後すぐにホームへ
+    router.push('/');
+    router.refresh();
   };
-
-  if (success) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-100 via-blue-50 to-slate-100 flex items-center justify-center px-4">
-        <div className="w-full max-w-md">
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">登録完了</h2>
-            <p className="text-gray-600 mb-6">
-              確認メールを送信しました。<br />
-              メール内のリンクをクリックして登録を完了してください。
-            </p>
-            <Link
-              href="/login"
-              className="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              ログインページへ
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 via-blue-50 to-slate-100 flex items-center justify-center px-4">
@@ -86,8 +66,8 @@ export default function SignupPage() {
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">アカウント作成</h1>
-              <p className="text-gray-600 mt-1">無料で始めましょう</p>
+              <h1 className="text-2xl font-bold text-black">アカウント作成</h1>
+              <p className="text-black mt-1">社員専用</p>
             </div>
             <Link
               href="/login"
@@ -105,7 +85,7 @@ export default function SignupPage() {
             )}
 
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="name" className="block text-sm font-medium text-black mb-1">
                 お名前
               </label>
               <input
@@ -114,14 +94,14 @@ export default function SignupPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                 placeholder="山田 太郎"
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                メールアドレス
+              <label htmlFor="email" className="block text-sm font-medium text-black mb-1">
+                メールアドレス（社員のみ）
               </label>
               <input
                 id="email"
@@ -129,13 +109,14 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="example@email.com"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                placeholder="yourname@monstar-lab.com"
               />
+              <p className="text-xs text-gray-500 mt-1">@monstar-lab.com のアドレスのみ登録可能</p>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-black mb-1">
                 パスワード
               </label>
               <input
@@ -145,13 +126,13 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                 placeholder="6文字以上"
               />
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-black mb-1">
                 パスワード（確認）
               </label>
               <input
@@ -160,7 +141,7 @@ export default function SignupPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                 placeholder="もう一度入力"
               />
             </div>
@@ -174,7 +155,7 @@ export default function SignupPage() {
             </button>
           </form>
 
-          <p className="text-xs text-gray-500 text-center mt-6">
+          <p className="text-xs text-black text-center mt-6">
             登録することで、利用規約に同意したものとみなされます
           </p>
         </div>

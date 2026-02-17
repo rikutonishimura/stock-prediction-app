@@ -56,20 +56,26 @@ export function useRanking(): UseRankingReturn {
 
     try {
       const response = await fetch('/api/ranking', { signal });
+      if (signal?.aborted) return;
       if (!response.ok) {
         throw new Error('ランキングの取得に失敗しました');
       }
 
       const data: RankingData = await response.json();
+      if (signal?.aborted) return;
       setRankings(data.rankings);
       setTotalUsers(data.totalUsers);
       setRegisteredUsers(data.registeredUsers || []);
+      setLoading(false);
     } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
+      // AbortErrorは無視（コンポーネントのアンマウント時など）
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return;
+      }
+      if (signal?.aborted) {
         return;
       }
       setError(err instanceof Error ? err.message : 'エラーが発生しました');
-    } finally {
       setLoading(false);
     }
   }, []);
@@ -77,7 +83,7 @@ export function useRanking(): UseRankingReturn {
   useEffect(() => {
     const controller = new AbortController();
     fetchRankings(controller.signal);
-    return () => controller.abort();
+    return () => controller.abort('component unmounted');
   }, [fetchRankings]);
 
   return {
@@ -86,6 +92,6 @@ export function useRanking(): UseRankingReturn {
     registeredUsers,
     loading,
     error,
-    refetch: fetchRankings,
+    refetch: () => fetchRankings(),
   };
 }

@@ -29,7 +29,7 @@ type InputMode = 'price' | 'percent';
 
 interface PredictionFormProps {
   stockData: { nikkei: StockQuote | null; sp500: StockQuote | null } | null;
-  onSubmit: (input: PredictionInput) => void;
+  onSubmit: (input: PredictionInput) => Promise<void>;
   disabled?: boolean;
 }
 
@@ -39,6 +39,7 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
   const [sp500Value, setSp500Value] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [submittedPrediction, setSubmittedPrediction] = useState<SubmittedPrediction | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 株価データが更新されたら初期値をリセット
   useEffect(() => {
@@ -56,7 +57,7 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
     return previousClose * (1 + percent / 100);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!stockData?.nikkei?.previousClose || !stockData?.sp500?.previousClose) {
@@ -90,34 +91,56 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
       sp500PredictedPrice = percentToPrice(sp500Num, stockData.sp500.previousClose);
     }
 
-    onSubmit({
-      nikkei: {
-        previousClose: stockData.nikkei.previousClose,
-        predictedChange: nikkeiChange,
-      },
-      sp500: {
-        previousClose: stockData.sp500.previousClose,
-        predictedChange: sp500Change,
-      },
-    });
+    setIsSubmitting(true);
 
-    // モーダル表示用のデータを保存
-    setSubmittedPrediction({
-      nikkei: {
-        previousClose: stockData.nikkei.previousClose,
-        predictedPrice: nikkeiPredictedPrice,
-        predictedChange: nikkeiChange,
-      },
-      sp500: {
-        previousClose: stockData.sp500.previousClose,
-        predictedPrice: sp500PredictedPrice,
-        predictedChange: sp500Change,
-      },
-    });
-    setShowModal(true);
+    try {
+      // タイムアウト付きで登録処理を実行（30秒）
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('タイムアウト')), 30000)
+      );
 
-    setNikkeiValue('');
-    setSp500Value('');
+      await Promise.race([
+        onSubmit({
+          nikkei: {
+            previousClose: stockData.nikkei.previousClose,
+            predictedChange: nikkeiChange,
+          },
+          sp500: {
+            previousClose: stockData.sp500.previousClose,
+            predictedChange: sp500Change,
+          },
+        }),
+        timeoutPromise,
+      ]);
+
+      // モーダル表示用のデータを保存
+      setSubmittedPrediction({
+        nikkei: {
+          previousClose: stockData.nikkei.previousClose,
+          predictedPrice: nikkeiPredictedPrice,
+          predictedChange: nikkeiChange,
+        },
+        sp500: {
+          previousClose: stockData.sp500.previousClose,
+          predictedPrice: sp500PredictedPrice,
+          predictedChange: sp500Change,
+        },
+      });
+      setShowModal(true);
+
+      setNikkeiValue('');
+      setSp500Value('');
+    } catch (error) {
+      console.error('Error submitting prediction:', error);
+      if (error instanceof Error && error.message === 'タイムアウト') {
+        alert('登録処理がタイムアウトしました（30秒）。\n\nブラウザの開発者ツール（F12）のコンソールでエラーを確認してください。\n\nSupabaseダッシュボードでプロジェクトが一時停止していないか確認してください。');
+      } else {
+        const errorMessage = error instanceof Error ? error.message : '不明なエラー';
+        alert(`予想の登録に失敗しました。\n\nエラー: ${errorMessage}\n\nコンソールで詳細を確認してください。`);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // 計算結果を表示（入力モードの逆を表示）
@@ -273,10 +296,10 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
 
       <button
         type="submit"
-        disabled={disabled || !stockData?.nikkei || !stockData?.sp500}
+        disabled={disabled || isSubmitting || !stockData?.nikkei || !stockData?.sp500}
         className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors"
       >
-        {disabled ? '本日は入力済みです' : '予想を登録'}
+        {disabled ? '本日は入力済みです' : isSubmitting ? '登録中...' : '予想を登録'}
       </button>
     </form>
 
