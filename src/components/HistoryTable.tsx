@@ -216,7 +216,7 @@ export function HistoryTable({ predictions, onDelete, onEdit }: HistoryTableProp
               onClick={() => setSelectedSymbol('nikkei')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 selectedSymbol === 'nikkei'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-blue-600 text-white active-tab-btn'
                   : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
               }`}
             >
@@ -226,7 +226,7 @@ export function HistoryTable({ predictions, onDelete, onEdit }: HistoryTableProp
               onClick={() => setSelectedSymbol('sp500')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 selectedSymbol === 'sp500'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-blue-600 text-white active-tab-btn'
                   : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600'
               }`}
             >

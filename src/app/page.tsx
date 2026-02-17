@@ -189,7 +189,7 @@ export default function Home() {
                 onClick={() => setActiveTab('predict')}
                 className={`px-6 py-2 rounded-md font-medium transition-colors ${
                   activeTab === 'predict'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-blue-600 text-white active-tab-btn'
                     : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
                 }`}
               >
@@ -199,7 +199,7 @@ export default function Home() {
                 onClick={() => setActiveTab('stats')}
                 className={`px-6 py-2 rounded-md font-medium transition-colors ${
                   activeTab === 'stats'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-blue-600 text-white active-tab-btn'
                     : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
                 }`}
               >
