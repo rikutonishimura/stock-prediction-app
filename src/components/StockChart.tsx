@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -36,6 +36,16 @@ interface ChartPanelProps {
 }
 
 function ChartPanel({ data, period, color, currency, isDark }: ChartPanelProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    // DOMが完全にレンダリングされるのを待つ
+    const timer = requestAnimationFrame(() => {
+      setIsMounted(true);
+    });
+    return () => cancelAnimationFrame(timer);
+  }, []);
+
   // ダークモード用の色設定
   const tickColor = isDark ? '#ffffff' : '#6b7280';
   const gridColor = isDark ? '#ffffff' : '#e5e7eb';
@@ -99,9 +109,10 @@ function ChartPanel({ data, period, color, currency, isDark }: ChartPanelProps) 
         </div>
       </div>
 
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+      <div className="h-64" style={{ minHeight: 256, minWidth: 200 }}>
+        {isMounted && (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
             <XAxis
               dataKey="formattedDate"
@@ -151,7 +162,8 @@ function ChartPanel({ data, period, color, currency, isDark }: ChartPanelProps) 
               activeDot={{ r: 4, fill: lineColor }}
             />
           </LineChart>
-        </ResponsiveContainer>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );
@@ -246,16 +258,16 @@ export function StockChart() {
             activeTab === 'both' ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'
           }`}
         >
-          {(activeTab === 'both' || activeTab === 'sp500') && sp500 && (
+          {(activeTab === 'both' || activeTab === 'sp500') && sp500 && sp500.data.length > 0 && (
             <ChartPanel data={sp500} period={period} color={CHART_CONFIG.sp500.color} currency={CHART_CONFIG.sp500.currency} isDark={isDark} />
           )}
-          {(activeTab === 'both' || activeTab === 'nikkei') && nikkei && (
+          {(activeTab === 'both' || activeTab === 'nikkei') && nikkei && nikkei.data.length > 0 && (
             <ChartPanel data={nikkei} period={period} color={CHART_CONFIG.nikkei.color} currency={CHART_CONFIG.nikkei.currency} isDark={isDark} />
           )}
-          {activeTab === 'gold' && gold && (
+          {activeTab === 'gold' && gold && gold.data.length > 0 && (
             <ChartPanel data={gold} period={period} color={CHART_CONFIG.gold.color} currency={CHART_CONFIG.gold.currency} isDark={isDark} />
           )}
-          {activeTab === 'usdjpy' && usdjpy && (
+          {activeTab === 'usdjpy' && usdjpy && usdjpy.data.length > 0 && (
             <ChartPanel data={usdjpy} period={period} color={CHART_CONFIG.usdjpy.color} currency={CHART_CONFIG.usdjpy.currency} isDark={isDark} />
           )}
         </div>

@@ -91,20 +91,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // 認証状態の変更を監視
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session: Session | null) => {
+      (_event: AuthChangeEvent, session: Session | null) => {
         if (isMounted) {
-          console.log('Auth state changed:', event);
           setUser(session?.user ?? null);
+          setLoading(false);
 
           if (session?.user) {
-            await fetchProfile(session.user.id);
+            fetchProfile(session.user.id);
           } else {
             setProfile(null);
-          }
-
-          // TOKEN_REFRESHED イベントでセッションが更新された場合
-          if (event === 'TOKEN_REFRESHED' && session?.user) {
-            console.log('Session token refreshed');
           }
         }
       }

@@ -71,9 +71,14 @@ export async function getTodayPrediction(userId: string): Promise<PredictionReco
     .select('*')
     .eq('user_id', userId)
     .eq('date', today)
-    .single();
+    .maybeSingle();
 
-  if (error || !data) {
+  if (error) {
+    console.error('Error fetching today prediction:', error);
+    return null;
+  }
+
+  if (!data) {
     return null;
   }
 
@@ -102,34 +107,65 @@ export async function getPendingPredictions(userId: string): Promise<PredictionR
 }
 
 /**
- * 予想を追加
+ * 予想を追加（Supabase JS SDK版）
  */
 export async function addPrediction(
   userId: string,
   input: PredictionInput
 ): Promise<PredictionRecord | null> {
-  const supabase = createClient();
+  const startTime = Date.now();
   const today = getToday();
 
-  const { data, error } = await supabase
-    .from('predictions')
-    .insert({
+  console.log('[addPrediction] 開始', { userId, today });
+
+  try {
+    const supabase = createClient();
+    console.log('[addPrediction] Supabaseクライアント作成完了', Date.now() - startTime, 'ms');
+
+    // 直接insertを実行（RLSがauth.uid()を使用するため、セッションは自動的に使用される）
+    const insertData = {
       user_id: userId,
       date: today,
       nikkei_previous_close: input.nikkei.previousClose,
       nikkei_predicted_change: input.nikkei.predictedChange,
       sp500_previous_close: input.sp500.previousClose,
       sp500_predicted_change: input.sp500.predictedChange,
-    })
-    .select()
-    .single();
+    };
 
-  if (error) {
-    console.error('Error adding prediction:', error);
+    console.log('[addPrediction] INSERT実行開始', insertData);
+
+    const { data, error } = await supabase
+      .from('predictions')
+      .insert(insertData)
+      .select()
+      .single();
+
+    console.log('[addPrediction] INSERT完了', Date.now() - startTime, 'ms');
+
+    if (error) {
+      console.error('[addPrediction] INSERT エラー:', error);
+
+      // unique制約違反の場合は既存データを取得
+      if (error.code === '23505') {
+        console.log('[addPrediction] 既存データを取得中...');
+        const { data: existing } = await supabase
+          .from('predictions')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('date', today)
+          .single();
+        console.log('[addPrediction] 既存データ取得完了', Date.now() - startTime, 'ms');
+        return existing ? rowToRecord(existing) : null;
+      }
+      return null;
+    }
+
+    console.log('[addPrediction] 成功', data);
+    return data ? rowToRecord(data) : null;
+  } catch (err) {
+    console.error('[addPrediction] 例外:', err, Date.now() - startTime, 'ms');
     return null;
   }
-
-  return rowToRecord(data);
 }
 
 /**
