@@ -116,6 +116,14 @@
   border-color: #444444 !important;
 }
 
+.dark .divide-gray-100 > * + * {
+  border-color: #444444 !important;
+}
+
+.dark .divide-gray-100 > :not(:first-child) {
+  border-color: #444444 !important;
+}
+
 /* ダークモード: border-bのデフォルト色 */
 .dark .main-bg-dark .border-b {
   border-bottom-color: #444444 !important;
