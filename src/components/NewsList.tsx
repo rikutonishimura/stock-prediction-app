@@ -52,7 +52,7 @@ export function NewsList({ items, loading, error, category, onRefresh }: NewsLis
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md h-full flex flex-col">
       {/* ヘッダー */}
-      <div className="p-4 border-b dark:border-slate-700 flex justify-between items-center flex-shrink-0">
+      <div className="p-4 border-b dark:border-[#444] flex justify-between items-center flex-shrink-0">
         <div>
           <h2 className={`font-bold ${color}`}>{title}</h2>
           <span className="text-xs text-gray-400">{items.length}件</span>
@@ -93,7 +93,7 @@ export function NewsList({ items, loading, error, category, onRefresh }: NewsLis
           </div>
         )}
 
-        <ul className="divide-y divide-gray-100 dark:divide-slate-700">
+        <ul className="divide-y divide-gray-100 dark:divide-[#444]">
           {items.map((item) => (
             <li key={item.id} className="hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
               <a
