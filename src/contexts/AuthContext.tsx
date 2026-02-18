@@ -39,14 +39,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let retryCount = 0;
     const maxRetries = 3;
 
-    // プロフィールを取得
+    // プロフィールを取得（なければ自動作成）
     const fetchProfile = async (userId: string) => {
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', userId)
           .single();
+
+        if (error && error.code === 'PGRST116') {
+          // プロフィールが存在しない場合、auth.usersのメタデータから作成
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          const name = authUser?.user_metadata?.name || authUser?.email?.split('@')[0] || 'ユーザー';
+
+          const { data: newProfile } = await supabase
+            .from('profiles')
+            .upsert({
+              id: userId,
+              name: name,
+            }, { onConflict: 'id' })
+            .select()
+            .single();
+
+          if (isMounted) {
+            setProfile(newProfile);
+          }
+          return;
+        }
+
         if (isMounted) {
           setProfile(data);
         }
@@ -115,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // サインアップ
   const signUp = async (email: string, password: string, name: string) => {
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -127,6 +148,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       return { error: error.message };
+    }
+
+    // プロフィールテーブルにも挿入
+    if (data.user) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: data.user.id,
+          name: name,
+        }, { onConflict: 'id' });
+
+      if (profileError) {
+        console.error('Failed to create profile:', profileError);
+      }
     }
 
     return { error: null };

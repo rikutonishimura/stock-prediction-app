@@ -2,6 +2,7 @@
  * ランキングAPI
  *
  * 全ユーザーの予測精度ランキングを取得します。
+ * 市場終了後は未確定の予想を自動確定します。
  */
 
 import { NextResponse } from 'next/server';
@@ -12,6 +13,8 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+const YAHOO_FINANCE_API = 'https://query1.finance.yahoo.com/v8/finance/chart';
 
 interface LatestPrediction {
   date: string;
@@ -35,8 +38,112 @@ interface RegisteredUser {
   createdAt: string;
 }
 
+/**
+ * Yahoo Financeから株価の変化率を取得
+ */
+async function fetchChangePercent(symbol: string): Promise<number | null> {
+  try {
+    const url = `${YAHOO_FINANCE_API}/${encodeURIComponent(symbol)}?interval=1d&range=2d`;
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+    });
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    if (data.chart.error || !data.chart.result?.[0]) return null;
+
+    const meta = data.chart.result[0].meta;
+    const indicators = data.chart.result[0].indicators;
+    const currentPrice = meta.regularMarketPrice;
+    let previousClose = meta.previousClose || meta.chartPreviousClose;
+
+    if (!previousClose && indicators?.quote?.[0]?.close) {
+      const closes = indicators.quote[0].close.filter((c: number | null) => c !== null);
+      if (closes.length >= 2) previousClose = closes[closes.length - 2];
+      else if (closes.length === 1) previousClose = closes[0];
+    }
+    if (!previousClose) return null;
+
+    return ((currentPrice - previousClose) / previousClose) * 100;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 両方の市場が終了しているかチェック
+ */
+function areBothMarketsClosed(predictionDate: string): boolean {
+  const now = new Date();
+  const prediction = new Date(predictionDate + 'T00:00:00');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  prediction.setHours(0, 0, 0, 0);
+
+  if (prediction < today) return true;
+  if (prediction > today) return false;
+
+  const currentHourUTC = now.getUTCHours();
+  // 日経: UTC 06:00以降、S&P500: UTC 21:00以降
+  return currentHourUTC >= 6 && currentHourUTC >= 21;
+}
+
+/**
+ * 全ユーザーの未確定予想をサーバー側で自動確定
+ */
+async function autoConfirmAllPending() {
+  // 未確定の予想を取得
+  const { data: pending, error } = await supabase
+    .from('predictions')
+    .select('id, user_id, date, nikkei_predicted_change, sp500_predicted_change')
+    .is('confirmed_at', null);
+
+  if (error || !pending || pending.length === 0) return;
+
+  // 確定可能な予想をフィルタ
+  const eligiblePredictions = pending.filter(p => areBothMarketsClosed(p.date));
+  if (eligiblePredictions.length === 0) return;
+
+  // 株価データを取得
+  const [nikkeiChange, sp500Change] = await Promise.all([
+    fetchChangePercent('^N225'),
+    fetchChangePercent('^GSPC'),
+  ]);
+
+  if (nikkeiChange == null || sp500Change == null) {
+    console.error('[autoConfirmAll] 株価データ取得失敗');
+    return;
+  }
+
+  // 各予想を確定
+  for (const pred of eligiblePredictions) {
+    const nikkeiDeviation = Math.abs(Number(pred.nikkei_predicted_change) - nikkeiChange);
+    const sp500Deviation = Math.abs(Number(pred.sp500_predicted_change) - sp500Change);
+
+    const { error: updateError } = await supabase
+      .from('predictions')
+      .update({
+        nikkei_actual_change: nikkeiChange,
+        nikkei_deviation: nikkeiDeviation,
+        sp500_actual_change: sp500Change,
+        sp500_deviation: sp500Deviation,
+        confirmed_at: new Date().toISOString(),
+      })
+      .eq('id', pred.id);
+
+    if (updateError) {
+      console.error(`[autoConfirmAll] 確定エラー (${pred.id}):`, updateError);
+    } else {
+      console.log(`[autoConfirmAll] ${pred.date} user=${pred.user_id} を自動確定`);
+    }
+  }
+}
+
 export async function GET() {
   try {
+    // まず未確定の予想を自動確定
+    await autoConfirmAllPending();
+
     // 全ユーザーの確定済み予想を取得
     const { data: predictions, error: predictionsError } = await supabase
       .from('predictions')
