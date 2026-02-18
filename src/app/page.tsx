@@ -154,7 +154,7 @@ export default function Home() {
             {/* 使い方 */}
             <div className="p-4 bg-blue-50 dark:bg-slate-800 border dark:border-slate-700 rounded-lg mb-6">
               <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">使い方</h3>
-              <ol className="list-decimal list-inside space-y-1 text-sm text-blue-700 dark:text-gray-400">
+              <ol className="list-decimal list-inside space-y-1 text-sm text-blue-700 dark:text-gray-200">
                 <li>朝、予想変化率を入力して「予想を登録」をクリック</li>
                 <li>市場終了後、「結果を確定」ボタンで実際の値を記録</li>
                 <li>統計タブで乖離の推移を確認し、予測精度を改善</li>

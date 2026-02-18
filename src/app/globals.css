@@ -111,6 +111,11 @@
   background-color: #383838 !important;
 }
 
+/* ダークモード: divide-gray-100の区切り線 */
+.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #444444 !important;
+}
+
 /* ダークモード: ボーダー */
 .dark .main-bg-dark .dark\:border-slate-700 {
   border-color: rgba(255, 255, 255, 0.1) !important;
