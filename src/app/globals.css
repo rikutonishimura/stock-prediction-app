@@ -112,15 +112,11 @@
 }
 
 /* ダークモード: divide-gray-100の区切り線 */
-.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+.dark .divide-gray-100 > * {
   border-color: #444444 !important;
 }
 
-.dark .divide-gray-100 > * + * {
-  border-color: #444444 !important;
-}
-
-.dark .divide-gray-100 > :not(:first-child) {
+.dark .divide-gray-100 > li {
   border-color: #444444 !important;
 }
 
