@@ -99,7 +99,7 @@ async function analyzeWithAI(allNews: NewsItem[]): Promise<AIAnalysisResult> {
 
   const message = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
-    max_tokens: 4096,
+    max_tokens: 8192,
     messages: [
       {
         role: 'user',
@@ -160,12 +160,12 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 両カテゴリのニュースを取得（各15件に制限して合計30件）
+    // 両カテゴリのニュースを取得（各最大30件 = 合計最大60件）
     const [japanNews, usNews] = await Promise.all([
       fetchNews('japan'),
       fetchNews('us'),
     ]);
-    const allNews = [...japanNews.slice(0, 15), ...usNews.slice(0, 15)];
+    const allNews = [...japanNews, ...usNews];
 
     if (allNews.length === 0) {
       return NextResponse.json({ success: false, error: 'No news fetched' });
