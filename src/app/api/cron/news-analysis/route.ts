@@ -93,10 +93,7 @@ interface AIAnalysisResult {
 async function analyzeWithAI(allNews: NewsItem[]): Promise<AIAnalysisResult> {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
-  // ニュース数を制限（各カテゴリ最大15件 = 合計30件）
-  const limitedNews = allNews.slice(0, 30);
-
-  const newsList = limitedNews
+  const newsList = allNews
     .map((item, i) => `[${i}] ${item.category === 'japan' ? 'JP' : 'US'} ${item.title}`)
     .join('\n');
 
@@ -163,12 +160,12 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 両カテゴリのニュースを取得
+    // 両カテゴリのニュースを取得（各15件に制限して合計30件）
     const [japanNews, usNews] = await Promise.all([
       fetchNews('japan'),
       fetchNews('us'),
     ]);
-    const allNews = [...japanNews, ...usNews];
+    const allNews = [...japanNews.slice(0, 15), ...usNews.slice(0, 15)];
 
     if (allNews.length === 0) {
       return NextResponse.json({ success: false, error: 'No news fetched' });
