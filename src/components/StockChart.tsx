@@ -170,7 +170,7 @@ function ChartPanel({ data, period, color, currency, isDark }: ChartPanelProps) 
   );
 }
 
-type ChartType = 'both' | 'nikkei' | 'sp500' | 'gold' | 'usdjpy';
+type ChartType = 'both' | 'nikkei' | 'sp500' | 'gold' | 'usdjpy' | 'bitcoin';
 
 const CHART_CONFIG: Record<ChartType, { label: string; color: string; currency: string }> = {
   both: { label: '両方', color: '', currency: '' },
@@ -178,10 +178,11 @@ const CHART_CONFIG: Record<ChartType, { label: string; color: string; currency: 
   nikkei: { label: '日経', color: '#dc2626', currency: '¥' },
   gold: { label: 'ゴールド', color: '#f59e0b', currency: '$' },
   usdjpy: { label: 'ドル円', color: '#10b981', currency: '円' },
+  bitcoin: { label: 'BTC', color: '#f97316', currency: '$' },
 };
 
 export function StockChart() {
-  const { nikkei, sp500, gold, usdjpy, loading, error, period, setPeriod } = useStockHistory('3m');
+  const { nikkei, sp500, gold, usdjpy, bitcoin, loading, error, period, setPeriod } = useStockHistory('3m');
   const [activeTab, setActiveTab] = useState<ChartType>('both');
   const { isDark } = useTheme();
 
@@ -193,7 +194,7 @@ export function StockChart() {
     );
   }
 
-  const chartTypes: ChartType[] = ['both', 'sp500', 'nikkei', 'gold', 'usdjpy'];
+  const chartTypes: ChartType[] = ['both', 'sp500', 'nikkei', 'gold', 'usdjpy', 'bitcoin'];
 
   return (
     <div className="space-y-4">
@@ -270,6 +271,9 @@ export function StockChart() {
           )}
           {activeTab === 'usdjpy' && usdjpy && usdjpy.data.length > 0 && (
             <ChartPanel data={usdjpy} period={period} color={CHART_CONFIG.usdjpy.color} currency={CHART_CONFIG.usdjpy.currency} isDark={isDark} />
+          )}
+          {activeTab === 'bitcoin' && bitcoin && bitcoin.data.length > 0 && (
+            <ChartPanel data={bitcoin} period={period} color={CHART_CONFIG.bitcoin.color} currency={CHART_CONFIG.bitcoin.currency} isDark={isDark} />
           )}
         </div>
       )}

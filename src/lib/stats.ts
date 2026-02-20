@@ -60,8 +60,10 @@ export function calculateStockStats(
   records: PredictionRecord[],
   symbol: StockSymbol
 ): StockStats {
+  // この銘柄を予想したレコードのみ抽出（null = 未予想）
+  const applicableRecords = records.filter(r => r[symbol] != null);
   // 確定済みのレコードのみ抽出
-  const confirmedRecords = records.filter(r => r[symbol].actualChange !== null);
+  const confirmedRecords = applicableRecords.filter(r => r[symbol]!.actualChange !== null);
 
   if (confirmedRecords.length === 0) {
     return {
@@ -72,16 +74,16 @@ export function calculateStockStats(
       maxDeviationDate: null,
       standardDeviation: 0,
       directionAccuracy: 0,
-      totalPredictions: records.length,
+      totalPredictions: applicableRecords.length,
       confirmedPredictions: 0,
     };
   }
 
   const deviations = confirmedRecords.map(r => ({
     date: r.date,
-    deviation: r[symbol].deviation!,
-    predicted: r[symbol].predictedChange,
-    actual: r[symbol].actualChange!,
+    deviation: r[symbol]!.deviation!,
+    predicted: r[symbol]!.predictedChange,
+    actual: r[symbol]!.actualChange!,
   }));
 
   // 乖離の配列
@@ -117,7 +119,7 @@ export function calculateStockStats(
     maxDeviationDate,
     standardDeviation: calculateStandardDeviation(deviationValues),
     directionAccuracy: (correctDirections / confirmedRecords.length) * 100,
-    totalPredictions: records.length,
+    totalPredictions: applicableRecords.length,
     confirmedPredictions: confirmedRecords.length,
   };
 }
@@ -130,11 +132,12 @@ export function getDailyDetails(
   symbol: StockSymbol
 ): DailyDetail[] {
   return records
+    .filter(r => r[symbol] != null)
     .map(r => ({
       date: r.date,
-      predicted: r[symbol].predictedChange,
-      actual: r[symbol].actualChange,
-      deviation: r[symbol].deviation,
+      predicted: r[symbol]!.predictedChange,
+      actual: r[symbol]!.actualChange,
+      deviation: r[symbol]!.deviation,
     }))
     .sort((a, b) => b.date.localeCompare(a.date)); // 新しい順
 }

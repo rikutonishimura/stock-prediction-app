@@ -75,24 +75,20 @@ function RankingRow({ rank, user, isCurrentUser }: RankingRowProps) {
       <td className="py-3 px-3 text-center">
         {user.latestPrediction ? (
           <div className="flex flex-col gap-0.5 text-xs">
-            <span className={`font-mono ${
-              user.latestPrediction.nikkeiPredictedChange != null && user.latestPrediction.nikkeiPredictedChange >= 0
-                ? 'text-green-600 dark:text-green-400'
-                : 'text-red-600 dark:text-red-400'
-            }`}>
-              日経: {user.latestPrediction.nikkeiPredictedChange != null
-                ? `${user.latestPrediction.nikkeiPredictedChange >= 0 ? '+' : ''}${user.latestPrediction.nikkeiPredictedChange.toFixed(2)}%`
-                : '-'}
-            </span>
-            <span className={`font-mono ${
-              user.latestPrediction.sp500PredictedChange != null && user.latestPrediction.sp500PredictedChange >= 0
-                ? 'text-green-600 dark:text-green-400'
-                : 'text-red-600 dark:text-red-400'
-            }`}>
-              S&P: {user.latestPrediction.sp500PredictedChange != null
-                ? `${user.latestPrediction.sp500PredictedChange >= 0 ? '+' : ''}${user.latestPrediction.sp500PredictedChange.toFixed(2)}%`
-                : '-'}
-            </span>
+            {([
+              ['nikkeiPredictedChange', '日経'] as const,
+              ['sp500PredictedChange', 'S&P'] as const,
+              ['goldPredictedChange', '金'] as const,
+              ['bitcoinPredictedChange', 'BTC'] as const,
+            ]).map(([key, label]) => {
+              const val = user.latestPrediction![key as keyof typeof user.latestPrediction] as number | null;
+              if (val == null) return null;
+              return (
+                <span key={key} className={`font-mono ${val >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {label}: {val >= 0 ? '+' : ''}{val.toFixed(2)}%
+                </span>
+              );
+            })}
           </div>
         ) : (
           <span className="text-gray-400 dark:text-gray-500 text-xs">未入力</span>

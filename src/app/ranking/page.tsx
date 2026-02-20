@@ -94,6 +94,10 @@ export default function RankingPage() {
           nikkeiChange={stockData?.nikkei?.changePercent}
           sp500Price={stockData?.sp500?.price}
           sp500Change={stockData?.sp500?.changePercent}
+          goldPrice={stockData?.gold?.price}
+          goldChange={stockData?.gold?.changePercent}
+          bitcoinPrice={stockData?.bitcoin?.price}
+          bitcoinChange={stockData?.bitcoin?.changePercent}
         />
       </div>
 

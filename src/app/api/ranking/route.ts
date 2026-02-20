@@ -16,10 +16,26 @@ const supabase = createClient(
 
 const YAHOO_FINANCE_API = 'https://query1.finance.yahoo.com/v8/finance/chart';
 
+const ASSET_KEYS = ['nikkei', 'sp500', 'gold', 'bitcoin'] as const;
+const ASSET_SYMBOLS: Record<string, string> = {
+  nikkei: '^N225',
+  sp500: '^GSPC',
+  gold: 'GC=F',
+  bitcoin: 'BTC-USD',
+};
+const MARKET_CLOSE_HOURS_UTC: Record<string, number> = {
+  nikkei: 6,
+  sp500: 21,
+  gold: 22,
+  bitcoin: 21,
+};
+
 interface LatestPrediction {
   date: string;
   nikkeiPredictedChange: number | null;
   sp500PredictedChange: number | null;
+  goldPredictedChange: number | null;
+  bitcoinPredictedChange: number | null;
 }
 
 interface RankingUser {
@@ -38,9 +54,6 @@ interface RegisteredUser {
   createdAt: string;
 }
 
-/**
- * Yahoo Financeから株価の変化率を取得
- */
 async function fetchChangePercent(symbol: string): Promise<number | null> {
   try {
     const url = `${YAHOO_FINANCE_API}/${encodeURIComponent(symbol)}?interval=1d&range=2d`;
@@ -70,10 +83,7 @@ async function fetchChangePercent(symbol: string): Promise<number | null> {
   }
 }
 
-/**
- * 両方の市場が終了しているかチェック
- */
-function areBothMarketsClosed(predictionDate: string): boolean {
+function areAllPredictedMarketsClosed(predictionDate: string, predictedAssets: string[]): boolean {
   const now = new Date();
   const prediction = new Date(predictionDate + 'T00:00:00');
   const today = new Date();
@@ -84,64 +94,64 @@ function areBothMarketsClosed(predictionDate: string): boolean {
   if (prediction > today) return false;
 
   const currentHourUTC = now.getUTCHours();
-  // 日経: UTC 06:00以降、S&P500: UTC 21:00以降
-  return currentHourUTC >= 6 && currentHourUTC >= 21;
+  return predictedAssets.every(asset => currentHourUTC >= (MARKET_CLOSE_HOURS_UTC[asset] || 21));
 }
 
-/**
- * 全ユーザーの未確定予想をサーバー側で自動確定
- */
 async function autoConfirmAllPending() {
-  // 未確定の予想を取得
   const { data: pending, error } = await supabase
     .from('predictions')
-    .select('id, user_id, date, nikkei_predicted_change, sp500_predicted_change')
+    .select('id, user_id, date, nikkei_predicted_change, sp500_predicted_change, gold_predicted_change, bitcoin_predicted_change')
     .is('confirmed_at', null);
 
   if (error || !pending || pending.length === 0) return;
 
-  // 確定可能な予想をフィルタ
-  const eligiblePredictions = pending.filter(p => areBothMarketsClosed(p.date));
-  if (eligiblePredictions.length === 0) return;
+  // 各予想で予想した銘柄を判定し、閉場チェック
+  const eligible = pending.filter(p => {
+    const predictedAssets = ASSET_KEYS.filter(k => p[`${k}_predicted_change`] != null);
+    if (predictedAssets.length === 0) return false;
+    return areAllPredictedMarketsClosed(p.date, predictedAssets);
+  });
 
-  // 株価データを取得
-  const [nikkeiChange, sp500Change] = await Promise.all([
-    fetchChangePercent('^N225'),
-    fetchChangePercent('^GSPC'),
-  ]);
+  if (eligible.length === 0) return;
 
-  if (nikkeiChange == null || sp500Change == null) {
-    console.error('[autoConfirmAll] 株価データ取得失敗');
-    return;
+  // 必要な銘柄の株価データのみ取得
+  const neededSymbols = new Set<string>();
+  for (const pred of eligible) {
+    for (const key of ASSET_KEYS) {
+      if (pred[`${key}_predicted_change`] != null) neededSymbols.add(key);
+    }
   }
 
-  // 各予想を確定
-  for (const pred of eligiblePredictions) {
-    const nikkeiDeviation = Math.abs(Number(pred.nikkei_predicted_change) - nikkeiChange);
-    const sp500Deviation = Math.abs(Number(pred.sp500_predicted_change) - sp500Change);
+  const changePercents: Record<string, number | null> = {};
+  await Promise.all(
+    Array.from(neededSymbols).map(async (key) => {
+      changePercents[key] = await fetchChangePercent(ASSET_SYMBOLS[key]);
+    })
+  );
+
+  for (const pred of eligible) {
+    const updates: Record<string, unknown> = { confirmed_at: new Date().toISOString() };
+
+    for (const key of ASSET_KEYS) {
+      if (pred[`${key}_predicted_change`] != null && changePercents[key] != null) {
+        updates[`${key}_actual_change`] = changePercents[key];
+        updates[`${key}_deviation`] = Math.abs(Number(pred[`${key}_predicted_change`]) - changePercents[key]!);
+      }
+    }
 
     const { error: updateError } = await supabase
       .from('predictions')
-      .update({
-        nikkei_actual_change: nikkeiChange,
-        nikkei_deviation: nikkeiDeviation,
-        sp500_actual_change: sp500Change,
-        sp500_deviation: sp500Deviation,
-        confirmed_at: new Date().toISOString(),
-      })
+      .update(updates)
       .eq('id', pred.id);
 
     if (updateError) {
       console.error(`[autoConfirmAll] 確定エラー (${pred.id}):`, updateError);
-    } else {
-      console.log(`[autoConfirmAll] ${pred.date} user=${pred.user_id} を自動確定`);
     }
   }
 }
 
 export async function GET() {
   try {
-    // まず未確定の予想を自動確定
     await autoConfirmAllPending();
 
     // 全ユーザーの確定済み予想を取得
@@ -149,12 +159,11 @@ export async function GET() {
       .from('predictions')
       .select(`
         user_id,
-        nikkei_deviation,
-        sp500_deviation,
-        nikkei_predicted_change,
-        nikkei_actual_change,
-        sp500_predicted_change,
-        sp500_actual_change,
+        nikkei_deviation, sp500_deviation, gold_deviation, bitcoin_deviation,
+        nikkei_predicted_change, nikkei_actual_change,
+        sp500_predicted_change, sp500_actual_change,
+        gold_predicted_change, gold_actual_change,
+        bitcoin_predicted_change, bitcoin_actual_change,
         confirmed_at
       `)
       .not('confirmed_at', 'is', null);
@@ -164,7 +173,6 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch predictions' }, { status: 500 });
     }
 
-    // プロフィール情報を取得
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, name, created_at')
@@ -175,10 +183,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch profiles' }, { status: 500 });
     }
 
-    // プロフィールマップを作成
     const profileMap = new Map(profiles?.map(p => [p.id, p.name]) || []);
 
-    // 登録ユーザー一覧を作成
     const registeredUsers: RegisteredUser[] = (profiles || []).map(p => ({
       id: p.id,
       name: p.name || '匿名ユーザー',
@@ -191,31 +197,31 @@ export async function GET() {
     const jstDate = new Date(today.getTime() + jstOffset);
     const todayStr = jstDate.toISOString().split('T')[0];
 
-    // 各ユーザーの最新の予測を取得
     const { data: latestPredictions, error: latestError } = await supabase
       .from('predictions')
-      .select('user_id, date, nikkei_predicted_change, sp500_predicted_change')
+      .select('user_id, date, nikkei_predicted_change, sp500_predicted_change, gold_predicted_change, bitcoin_predicted_change')
       .eq('date', todayStr);
 
     if (latestError) {
       console.error('Error fetching latest predictions:', latestError);
     }
 
-    // 最新予測マップを作成
     const latestPredictionMap = new Map<string, LatestPrediction>();
     latestPredictions?.forEach(p => {
       latestPredictionMap.set(p.user_id, {
         date: p.date,
         nikkeiPredictedChange: p.nikkei_predicted_change != null ? Number(p.nikkei_predicted_change) : null,
         sp500PredictedChange: p.sp500_predicted_change != null ? Number(p.sp500_predicted_change) : null,
+        goldPredictedChange: p.gold_predicted_change != null ? Number(p.gold_predicted_change) : null,
+        bitcoinPredictedChange: p.bitcoin_predicted_change != null ? Number(p.bitcoin_predicted_change) : null,
       });
     });
 
     // ユーザーごとの統計を計算
     const userStatsMap = new Map<string, {
       deviations: number[];
-      nikkeiDirectionCorrect: number;
-      sp500DirectionCorrect: number;
+      directionCorrect: number;
+      directionTotal: number;
       totalPredictions: number;
     }>();
 
@@ -224,49 +230,42 @@ export async function GET() {
       if (!userStatsMap.has(userId)) {
         userStatsMap.set(userId, {
           deviations: [],
-          nikkeiDirectionCorrect: 0,
-          sp500DirectionCorrect: 0,
+          directionCorrect: 0,
+          directionTotal: 0,
           totalPredictions: 0,
         });
       }
 
       const stats = userStatsMap.get(userId)!;
 
-      // 乖離を追加
-      if (p.nikkei_deviation != null) {
-        stats.deviations.push(Number(p.nikkei_deviation));
-      }
-      if (p.sp500_deviation != null) {
-        stats.deviations.push(Number(p.sp500_deviation));
-      }
-
-      // 方向正答率を計算
-      if (p.nikkei_predicted_change != null && p.nikkei_actual_change != null) {
-        const predictedDirection = Number(p.nikkei_predicted_change) >= 0;
-        const actualDirection = Number(p.nikkei_actual_change) >= 0;
-        if (predictedDirection === actualDirection) {
-          stats.nikkeiDirectionCorrect++;
+      for (const key of ASSET_KEYS) {
+        const deviation = p[`${key}_deviation`];
+        if (deviation != null) {
+          stats.deviations.push(Number(deviation));
         }
-      }
-      if (p.sp500_predicted_change != null && p.sp500_actual_change != null) {
-        const predictedDirection = Number(p.sp500_predicted_change) >= 0;
-        const actualDirection = Number(p.sp500_actual_change) >= 0;
-        if (predictedDirection === actualDirection) {
-          stats.sp500DirectionCorrect++;
+
+        const predicted = p[`${key}_predicted_change`];
+        const actual = p[`${key}_actual_change`];
+        if (predicted != null && actual != null) {
+          stats.directionTotal++;
+          if ((Number(predicted) >= 0) === (Number(actual) >= 0)) {
+            stats.directionCorrect++;
+          }
         }
       }
 
       stats.totalPredictions++;
     });
 
-    // ランキングデータを作成
     const rankings: RankingUser[] = [];
 
     userStatsMap.forEach((stats, userId) => {
       if (stats.deviations.length === 0) return;
 
       const averageDeviation = stats.deviations.reduce((a, b) => a + b, 0) / stats.deviations.length;
-      const directionAccuracy = ((stats.nikkeiDirectionCorrect + stats.sp500DirectionCorrect) / (stats.totalPredictions * 2)) * 100;
+      const directionAccuracy = stats.directionTotal > 0
+        ? (stats.directionCorrect / stats.directionTotal) * 100
+        : 0;
 
       rankings.push({
         userId,
@@ -279,11 +278,10 @@ export async function GET() {
       });
     });
 
-    // 平均乖離が小さい順にソート
     rankings.sort((a, b) => a.averageDeviation - b.averageDeviation);
 
     return NextResponse.json({
-      rankings: rankings.slice(0, 50), // 上位50人まで
+      rankings: rankings.slice(0, 50),
       totalUsers: rankings.length,
       registeredUsers,
     });

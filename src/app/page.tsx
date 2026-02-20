@@ -9,10 +9,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { PredictionForm, ResultCard, StatsPanel, NewsList, StockTicker, StockChart, ThemeToggle, UserMenu } from '@/components';
+import { PredictionForm, ResultCard, StatsPanel, NewsList, StockTicker, StockChart, ThemeToggle, UserMenu, CheckpointPanel } from '@/components';
 import { useStock } from '@/hooks/useStock';
 import { usePredictions } from '@/hooks/usePredictions';
 import { useNews } from '@/hooks/useNews';
+import { useNewsAnalysis } from '@/hooks/useNewsAnalysis';
 import { useAuth } from '@/hooks/useAuth';
 import type { PredictionInput } from '@/types';
 
@@ -23,6 +24,7 @@ export default function Home() {
   const { items: japanNews, loading: japanNewsLoading, error: japanNewsError, refetch: refetchJapanNews } = useNews('japan');
   const { items: usNews, loading: usNewsLoading, error: usNewsError, refetch: refetchUsNews } = useNews('us');
   const { user, profile, signOut, updateProfile, loading: authLoading } = useAuth();
+  const { japanItems: analyzedJapanNews, usItems: analyzedUsNews, checkpoint, analysisTimestamp, loading: analysisLoading } = useNewsAnalysis(japanNews, usNews);
   const router = useRouter();
 
   // 未ログイン時はログインページにリダイレクト
@@ -61,6 +63,8 @@ export default function Home() {
     results: {
       nikkei?: { actualChange: number };
       sp500?: { actualChange: number };
+      gold?: { actualChange: number };
+      bitcoin?: { actualChange: number };
     }
   ) => {
     await updateResult(id, results);
@@ -72,6 +76,8 @@ export default function Home() {
     updates: {
       nikkei?: { predictedChange?: number; actualChange?: number | null };
       sp500?: { predictedChange?: number; actualChange?: number | null };
+      gold?: { predictedChange?: number; actualChange?: number | null };
+      bitcoin?: { predictedChange?: number; actualChange?: number | null };
     }
   ) => {
     await edit(id, updates);
@@ -130,6 +136,10 @@ export default function Home() {
           nikkeiChange={stockData?.nikkei?.changePercent}
           sp500Price={stockData?.sp500?.price}
           sp500Change={stockData?.sp500?.changePercent}
+          goldPrice={stockData?.gold?.price}
+          goldChange={stockData?.gold?.changePercent}
+          bitcoinPrice={stockData?.bitcoin?.price}
+          bitcoinChange={stockData?.bitcoin?.changePercent}
         />
       </div>
 
@@ -140,7 +150,7 @@ export default function Home() {
           <div className="hidden xl:block order-1">
             <div className="sticky top-[6.5rem] h-[calc(100vh-10rem)]">
               <NewsList
-                items={usNews}
+                items={analyzedUsNews}
                 loading={usNewsLoading}
                 error={usNewsError}
                 category="us"
@@ -153,23 +163,22 @@ export default function Home() {
           <div className="order-2 lg:order-2">
             {/* 使い方 */}
             <div className="p-4 bg-blue-50 dark:bg-slate-800 border dark:border-slate-700 rounded-lg mb-6">
-              <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">使い方</h3>
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="font-semibold text-blue-800 dark:text-green-400">使い方</h3>
+                <button
+                  onClick={refetch}
+                  disabled={stockLoading}
+                  className="px-4 py-1.5 bg-white dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors text-sm border border-gray-200 dark:border-slate-600"
+                >
+                  {stockLoading ? '更新中...' : '株価を更新'}
+                </button>
+              </div>
               <ol className="list-decimal list-inside space-y-1 text-sm text-blue-700 dark:text-gray-200">
-                <li>朝、予想変化率を入力して「予想を登録」をクリック</li>
-                <li>市場終了後、「結果を確定」ボタンで実際の値を記録</li>
-                <li>統計タブで乖離の推移を確認し、予測精度を改善</li>
+                <li>市場調査：左右のニュースやチャートから、今日の米国・日本市場の終値を予想する</li>
+                <li>予想登録：本日の予想終値を入力し、「予想を登録」ボタンをクリック</li>
+                <li>精度向上：統計・履歴タブで、実績との乖離を確認して予測の癖を改善する</li>
+                <li>他者比較：ランキングで他の参加者の予想を参考にし、自身の精度を比較する</li>
               </ol>
-            </div>
-
-            {/* 株価更新ボタン */}
-            <div className="flex justify-end mb-4">
-              <button
-                onClick={refetch}
-                disabled={stockLoading}
-                className="px-4 py-2 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors text-sm"
-              >
-                {stockLoading ? '更新中...' : '株価を更新'}
-              </button>
             </div>
 
             {stockError && (
@@ -182,6 +191,13 @@ export default function Home() {
             <div className="mb-6">
               <StockChart />
             </div>
+
+            {/* 今日のチェックポイント */}
+            <CheckpointPanel
+              checkpoint={checkpoint}
+              analysisTimestamp={analysisTimestamp}
+              loading={analysisLoading}
+            />
 
             {/* タブ切り替え */}
             <div className="flex gap-2 mb-6">
@@ -251,7 +267,7 @@ export default function Home() {
           <div className="hidden lg:block order-3">
             <div className="sticky top-[6.5rem] h-[calc(100vh-10rem)]">
               <NewsList
-                items={japanNews}
+                items={analyzedJapanNews}
                 loading={japanNewsLoading}
                 error={japanNewsError}
                 category="japan"

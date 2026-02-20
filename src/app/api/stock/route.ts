@@ -83,9 +83,11 @@ async function fetchStock(symbol: string, name: string): Promise<StockQuoteResul
 
 export async function GET() {
   try {
-    const [nikkei, sp500] = await Promise.all([
+    const [nikkei, sp500, gold, bitcoin] = await Promise.all([
       fetchStock('^N225', '日経平均'),
       fetchStock('^GSPC', 'S&P500'),
+      fetchStock('GC=F', 'ゴールド'),
+      fetchStock('BTC-USD', 'ビットコイン'),
     ]);
 
     return NextResponse.json({
@@ -93,6 +95,8 @@ export async function GET() {
       data: {
         nikkei,
         sp500,
+        gold,
+        bitcoin,
       },
       timestamp: new Date().toISOString(),
     });

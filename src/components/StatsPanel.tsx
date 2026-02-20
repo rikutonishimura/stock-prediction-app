@@ -101,6 +101,8 @@ export function StatsPanel({ stats }: StatsPanelProps) {
       <div className="grid md:grid-cols-2 gap-6">
         <SingleStats title="日経平均" stats={stats.nikkei} />
         <SingleStats title="S&P500" stats={stats.sp500} />
+        <SingleStats title="ゴールド" stats={stats.gold} />
+        <SingleStats title="ビットコイン" stats={stats.bitcoin} />
       </div>
 
       {/* 精度の目安 */}

@@ -6,7 +6,14 @@
 
 'use client';
 
-import type { NewsItem, NewsCategory } from '@/types';
+import type { NewsItem, NewsCategory, NewsTag } from '@/types';
+
+const TAG_COLORS: Record<NewsTag, string> = {
+  '金融政策': 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+  '企業業績': 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
+  '経済指標': 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  '地政学': 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+};
 
 interface NewsListProps {
   items: NewsItem[];
@@ -41,18 +48,18 @@ function formatRelativeTime(dateString: string): string {
   }
 }
 
-const CATEGORY_LABELS: Record<NewsCategory, { title: string; color: string }> = {
-  japan: { title: '日本経済ニュース', color: 'text-red-600' },
-  us: { title: '米国経済ニュース', color: 'text-blue-600' },
+const CATEGORY_LABELS: Record<NewsCategory, { title: string; color: string; bgClass: string }> = {
+  japan: { title: '日本経済ニュース', color: 'text-red-600 dark:text-red-400', bgClass: 'news-header-japan' },
+  us: { title: '米国経済ニュース', color: 'text-blue-600 dark:text-blue-400', bgClass: 'news-header-us' },
 };
 
 export function NewsList({ items, loading, error, category, onRefresh }: NewsListProps) {
-  const { title, color } = CATEGORY_LABELS[category];
+  const { title, color, bgClass } = CATEGORY_LABELS[category];
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md h-full flex flex-col">
       {/* ヘッダー */}
-      <div className="p-4 border-b dark:border-[#444] flex justify-between items-center flex-shrink-0">
+      <div className={`p-4 border-b dark:border-[#444] flex justify-between items-center flex-shrink-0 ${bgClass}`}>
         <div>
           <h2 className={`font-bold ${color}`}>{title}</h2>
           <span className="text-xs text-gray-400">{items.length}件</span>
@@ -102,6 +109,28 @@ export function NewsList({ items, loading, error, category, onRefresh }: NewsLis
                 rel="noopener noreferrer"
                 className="block p-3"
               >
+                {/* AIタグ行 */}
+                {item.tag && (
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${TAG_COLORS[item.tag]}`}>
+                      {item.tag}
+                    </span>
+                    {item.importance && (
+                      <span className="text-yellow-500 text-[10px]">
+                        {'★'.repeat(item.importance)}{'☆'.repeat(3 - item.importance)}
+                      </span>
+                    )}
+                    {item.sentiment && (
+                      <span className={`text-xs font-bold ${
+                        item.sentiment === 'bullish'
+                          ? 'text-red-500 dark:text-red-400'
+                          : 'text-blue-500 dark:text-blue-400'
+                      }`}>
+                        {item.sentiment === 'bullish' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
+                )}
                 <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400">
                   {item.title}
                 </h3>

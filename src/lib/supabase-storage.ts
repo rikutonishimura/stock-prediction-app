@@ -5,25 +5,30 @@
  */
 
 import { createClient } from '@/lib/supabase/client';
-import type { PredictionRecord, PredictionInput } from '@/types';
+import type { PredictionRecord, PredictionInput, StockSymbol } from '@/types';
+
+const ASSET_KEYS: StockSymbol[] = ['nikkei', 'sp500', 'gold', 'bitcoin'];
+
+// DBの行からStockPredictionを生成（predicted_changeがnullなら未予想=null）
+function assetFromRow(row: Record<string, unknown>, prefix: string) {
+  if (row[`${prefix}_predicted_change`] == null) return null;
+  return {
+    previousClose: Number(row[`${prefix}_previous_close`]) || 0,
+    predictedChange: Number(row[`${prefix}_predicted_change`]) || 0,
+    actualChange: row[`${prefix}_actual_change`] != null ? Number(row[`${prefix}_actual_change`]) : null,
+    deviation: row[`${prefix}_deviation`] != null ? Number(row[`${prefix}_deviation`]) : null,
+  };
+}
 
 // DBの行をPredictionRecordに変換
 function rowToRecord(row: Record<string, unknown>): PredictionRecord {
   return {
     id: row.id as string,
     date: row.date as string,
-    nikkei: {
-      previousClose: Number(row.nikkei_previous_close) || 0,
-      predictedChange: Number(row.nikkei_predicted_change) || 0,
-      actualChange: row.nikkei_actual_change != null ? Number(row.nikkei_actual_change) : null,
-      deviation: row.nikkei_deviation != null ? Number(row.nikkei_deviation) : null,
-    },
-    sp500: {
-      previousClose: Number(row.sp500_previous_close) || 0,
-      predictedChange: Number(row.sp500_predicted_change) || 0,
-      actualChange: row.sp500_actual_change != null ? Number(row.sp500_actual_change) : null,
-      deviation: row.sp500_deviation != null ? Number(row.sp500_deviation) : null,
-    },
+    nikkei: assetFromRow(row, 'nikkei'),
+    sp500: assetFromRow(row, 'sp500'),
+    gold: assetFromRow(row, 'gold'),
+    bitcoin: assetFromRow(row, 'bitcoin'),
     createdAt: row.created_at as string,
     confirmedAt: row.confirmed_at as string | null,
   };
@@ -107,7 +112,7 @@ export async function getPendingPredictions(userId: string): Promise<PredictionR
 }
 
 /**
- * 予想を追加（Supabase JS SDK版）
+ * 予想を追加（選択した銘柄のみ）
  */
 export async function addPrediction(
   userId: string,
@@ -122,15 +127,19 @@ export async function addPrediction(
     const supabase = createClient();
     console.log('[addPrediction] Supabaseクライアント作成完了', Date.now() - startTime, 'ms');
 
-    // 直接insertを実行（RLSがauth.uid()を使用するため、セッションは自動的に使用される）
-    const insertData = {
+    const insertData: Record<string, unknown> = {
       user_id: userId,
       date: today,
-      nikkei_previous_close: input.nikkei.previousClose,
-      nikkei_predicted_change: input.nikkei.predictedChange,
-      sp500_previous_close: input.sp500.previousClose,
-      sp500_predicted_change: input.sp500.predictedChange,
     };
+
+    // 選択された銘柄のカラムだけ挿入
+    for (const key of ASSET_KEYS) {
+      const asset = input[key];
+      if (asset) {
+        insertData[`${key}_previous_close`] = asset.previousClose;
+        insertData[`${key}_predicted_change`] = asset.predictedChange;
+      }
+    }
 
     console.log('[addPrediction] INSERT実行開始', insertData);
 
@@ -177,6 +186,8 @@ export async function updatePredictionResult(
   results: {
     nikkei?: { actualChange: number };
     sp500?: { actualChange: number };
+    gold?: { actualChange: number };
+    bitcoin?: { actualChange: number };
   }
 ): Promise<PredictionRecord | null> {
   const supabase = createClient();
@@ -196,27 +207,25 @@ export async function updatePredictionResult(
 
   const updates: Record<string, unknown> = {};
 
-  if (results.nikkei) {
-    updates.nikkei_actual_change = results.nikkei.actualChange;
-    updates.nikkei_deviation = calculateDeviation(
-      Number(current.nikkei_predicted_change),
-      results.nikkei.actualChange
-    );
+  for (const key of ASSET_KEYS) {
+    const result = results[key];
+    if (result) {
+      updates[`${key}_actual_change`] = result.actualChange;
+      updates[`${key}_deviation`] = calculateDeviation(
+        Number(current[`${key}_predicted_change`]),
+        result.actualChange
+      );
+    }
   }
 
-  if (results.sp500) {
-    updates.sp500_actual_change = results.sp500.actualChange;
-    updates.sp500_deviation = calculateDeviation(
-      Number(current.sp500_predicted_change),
-      results.sp500.actualChange
-    );
-  }
+  // 予想した全銘柄に実績値があればconfirmed_atを設定
+  const allConfirmed = ASSET_KEYS.every(key => {
+    if (current[`${key}_predicted_change`] == null) return true; // 未予想はスキップ
+    const actualValue = results[key]?.actualChange ?? current[`${key}_actual_change`];
+    return actualValue != null;
+  });
 
-  // 両方確定したらconfirmed_atを設定
-  const nikkeiActual = results.nikkei?.actualChange ?? current.nikkei_actual_change;
-  const sp500Actual = results.sp500?.actualChange ?? current.sp500_actual_change;
-
-  if (nikkeiActual != null && sp500Actual != null) {
+  if (allConfirmed) {
     updates.confirmed_at = new Date().toISOString();
   }
 
@@ -245,42 +254,30 @@ export async function editPrediction(
   updates: {
     nikkei?: { predictedChange?: number; actualChange?: number | null };
     sp500?: { predictedChange?: number; actualChange?: number | null };
+    gold?: { predictedChange?: number; actualChange?: number | null };
+    bitcoin?: { predictedChange?: number; actualChange?: number | null };
   }
 ): Promise<PredictionRecord | null> {
   const supabase = createClient();
 
   const dbUpdates: Record<string, unknown> = {};
 
-  if (updates.nikkei) {
-    if (updates.nikkei.predictedChange !== undefined) {
-      dbUpdates.nikkei_predicted_change = updates.nikkei.predictedChange;
-    }
-    if (updates.nikkei.actualChange !== undefined) {
-      dbUpdates.nikkei_actual_change = updates.nikkei.actualChange;
-      if (updates.nikkei.actualChange != null && dbUpdates.nikkei_predicted_change !== undefined) {
-        dbUpdates.nikkei_deviation = calculateDeviation(
-          dbUpdates.nikkei_predicted_change as number,
-          updates.nikkei.actualChange
-        );
-      } else {
-        dbUpdates.nikkei_deviation = null;
-      }
-    }
-  }
+  for (const key of ASSET_KEYS) {
+    const upd = updates[key];
+    if (!upd) continue;
 
-  if (updates.sp500) {
-    if (updates.sp500.predictedChange !== undefined) {
-      dbUpdates.sp500_predicted_change = updates.sp500.predictedChange;
+    if (upd.predictedChange !== undefined) {
+      dbUpdates[`${key}_predicted_change`] = upd.predictedChange;
     }
-    if (updates.sp500.actualChange !== undefined) {
-      dbUpdates.sp500_actual_change = updates.sp500.actualChange;
-      if (updates.sp500.actualChange != null && dbUpdates.sp500_predicted_change !== undefined) {
-        dbUpdates.sp500_deviation = calculateDeviation(
-          dbUpdates.sp500_predicted_change as number,
-          updates.sp500.actualChange
+    if (upd.actualChange !== undefined) {
+      dbUpdates[`${key}_actual_change`] = upd.actualChange;
+      if (upd.actualChange != null && dbUpdates[`${key}_predicted_change`] !== undefined) {
+        dbUpdates[`${key}_deviation`] = calculateDeviation(
+          dbUpdates[`${key}_predicted_change`] as number,
+          upd.actualChange
         );
       } else {
-        dbUpdates.sp500_deviation = null;
+        dbUpdates[`${key}_deviation`] = null;
       }
     }
   }
@@ -294,14 +291,15 @@ export async function editPrediction(
     .single();
 
   if (current) {
-    const nikkeiActual = updates.nikkei?.actualChange !== undefined
-      ? updates.nikkei.actualChange
-      : current.nikkei_actual_change;
-    const sp500Actual = updates.sp500?.actualChange !== undefined
-      ? updates.sp500.actualChange
-      : current.sp500_actual_change;
+    const allConfirmed = ASSET_KEYS.every(key => {
+      if (current[`${key}_predicted_change`] == null) return true;
+      const actualVal = updates[key]?.actualChange !== undefined
+        ? updates[key]!.actualChange
+        : current[`${key}_actual_change`];
+      return actualVal != null;
+    });
 
-    if (nikkeiActual != null && sp500Actual != null) {
+    if (allConfirmed) {
       dbUpdates.confirmed_at = new Date().toISOString();
     } else {
       dbUpdates.confirmed_at = null;

@@ -8,7 +8,8 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { PredictionRecord, PredictionInput, OverallStats, StockQuote } from '@/types';
+import type { PredictionRecord, PredictionInput, OverallStats, StockQuote, StockSymbol } from '@/types';
+import { PREDICTABLE_SYMBOLS } from '@/types';
 import {
   getAllPredictions,
   addPrediction,
@@ -25,52 +26,48 @@ import { useAuth } from '@/hooks/useAuth';
 interface StockData {
   nikkei: StockQuote | null;
   sp500: StockQuote | null;
+  gold: StockQuote | null;
+  bitcoin: StockQuote | null;
 }
 
 interface UsePredictionsOptions {
-  /** 株価データ（自動確定に使用） */
   stockData?: StockData | null;
 }
 
 interface UsePredictionsReturn {
-  /** すべての予想レコード */
   predictions: PredictionRecord[];
-  /** 今日の予想 */
   todayPrediction: PredictionRecord | null;
-  /** 未確定の予想 */
   pendingPredictions: PredictionRecord[];
-  /** 統計サマリー */
   stats: OverallStats;
-  /** 読み込み中フラグ */
   loading: boolean;
-  /** 新しい予想を追加 */
   add: (input: PredictionInput) => Promise<PredictionRecord | null>;
-  /** 結果を更新 */
   updateResult: (
     id: string,
     results: {
       nikkei?: { actualChange: number };
       sp500?: { actualChange: number };
+      gold?: { actualChange: number };
+      bitcoin?: { actualChange: number };
     }
   ) => Promise<PredictionRecord | null>;
-  /** 予想を編集 */
   edit: (
     id: string,
     updates: {
       nikkei?: { predictedChange?: number; actualChange?: number | null };
       sp500?: { predictedChange?: number; actualChange?: number | null };
+      gold?: { predictedChange?: number; actualChange?: number | null };
+      bitcoin?: { predictedChange?: number; actualChange?: number | null };
     }
   ) => Promise<PredictionRecord | null>;
-  /** 予想を削除 */
   remove: (id: string) => Promise<boolean>;
-  /** データを再読み込み */
   refresh: () => void;
 }
 
-/**
- * 予想データを管理するフック
- * @param options.stockData 株価データ（自動確定に使用）
- */
+/** レコードから予想した銘柄を取得 */
+function getPredictedAssets(record: PredictionRecord): StockSymbol[] {
+  return PREDICTABLE_SYMBOLS.filter(s => record[s] != null);
+}
+
 export function usePredictions(options: UsePredictionsOptions = {}): UsePredictionsReturn {
   const { stockData } = options;
   const { user } = useAuth();
@@ -107,49 +104,59 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
     loadData();
   }, [loadData]);
 
-  // 自動確定処理（株価データが更新されたときのみ実行）
+  // 自動確定処理
   const autoConfirmRunRef = useRef(false);
   useEffect(() => {
-    if (!user || !stockData?.nikkei?.changePercent || !stockData?.sp500?.changePercent) {
+    if (!user || !stockData) {
       autoConfirmRunRef.current = false;
       return;
     }
 
-    // 既に実行済みの場合はスキップ（株価データが同じ間は1回だけ実行）
-    if (autoConfirmRunRef.current) {
+    // 少なくとも1つの株価データがあるか
+    const hasAnyData = PREDICTABLE_SYMBOLS.some(s => stockData[s]?.changePercent != null);
+    if (!hasAnyData) {
+      autoConfirmRunRef.current = false;
       return;
     }
+
+    if (autoConfirmRunRef.current) return;
     autoConfirmRunRef.current = true;
 
     const processAutoConfirm = async () => {
       let hasUpdates = false;
 
       for (const record of pendingPredictions) {
-        // 既に処理済みの場合はスキップ
-        if (autoConfirmProcessedRef.current.has(record.id)) {
-          continue;
-        }
+        if (autoConfirmProcessedRef.current.has(record.id)) continue;
 
-        // 自動確定可能かチェック
-        if (canAutoConfirm(record.date, record.confirmedAt)) {
-          // 自動確定を実行
-          const updated = await updatePredictionResult(user.id, record.id, {
-            nikkei: { actualChange: stockData.nikkei!.changePercent },
-            sp500: { actualChange: stockData.sp500!.changePercent },
-          });
+        const predictedAssets = getPredictedAssets(record);
+        if (predictedAssets.length === 0) continue;
 
+        if (canAutoConfirm(record.date, record.confirmedAt, predictedAssets)) {
+          const results: Record<string, { actualChange: number }> = {};
+          let allDataAvailable = true;
+
+          for (const asset of predictedAssets) {
+            const quote = stockData[asset];
+            if (quote?.changePercent != null) {
+              results[asset] = { actualChange: quote.changePercent };
+            } else {
+              allDataAvailable = false;
+              break;
+            }
+          }
+
+          if (!allDataAvailable) continue;
+
+          const updated = await updatePredictionResult(user.id, record.id, results);
           if (updated) {
             autoConfirmProcessedRef.current.add(record.id);
-            setPredictions((prev) =>
-              prev.map((p) => (p.id === record.id ? updated : p))
-            );
+            setPredictions(prev => prev.map(p => (p.id === record.id ? updated : p)));
             hasUpdates = true;
             console.log(`[自動確定] ${record.date} の予想を自動確定しました`);
           }
         }
       }
 
-      // 更新があった場合のみ再読み込み
       if (hasUpdates) {
         const [today, pending] = await Promise.all([
           getTodayPrediction(user.id),
@@ -170,7 +177,6 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
     if (newRecord) {
       setPredictions(prev => [newRecord, ...prev]);
       setTodayPrediction(newRecord);
-      // 新規追加したレコードは未確定なので、ローカルstateに直接追加（追加のAPI呼び出しを避ける）
       setPendingPredictions(prev => [newRecord, ...prev]);
     }
     return newRecord;
@@ -182,15 +188,15 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
       results: {
         nikkei?: { actualChange: number };
         sp500?: { actualChange: number };
+        gold?: { actualChange: number };
+        bitcoin?: { actualChange: number };
       }
     ): Promise<PredictionRecord | null> => {
       if (!user) return null;
 
       const updated = await updatePredictionResult(user.id, id, results);
       if (updated) {
-        setPredictions(prev =>
-          prev.map(p => (p.id === id ? updated : p))
-        );
+        setPredictions(prev => prev.map(p => (p.id === id ? updated : p)));
         const [today, pending] = await Promise.all([
           getTodayPrediction(user.id),
           getPendingPredictions(user.id),
@@ -225,15 +231,15 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
       updates: {
         nikkei?: { predictedChange?: number; actualChange?: number | null };
         sp500?: { predictedChange?: number; actualChange?: number | null };
+        gold?: { predictedChange?: number; actualChange?: number | null };
+        bitcoin?: { predictedChange?: number; actualChange?: number | null };
       }
     ): Promise<PredictionRecord | null> => {
       if (!user) return null;
 
       const updated = await editPrediction(user.id, id, updates);
       if (updated) {
-        setPredictions(prev =>
-          prev.map(p => (p.id === id ? updated : p))
-        );
+        setPredictions(prev => prev.map(p => (p.id === id ? updated : p)));
         const [today, pending] = await Promise.all([
           getTodayPrediction(user.id),
           getPendingPredictions(user.id),
@@ -246,10 +252,11 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
     [user]
   );
 
-  // 統計データ
   const stats: OverallStats = {
     nikkei: calculateStockStats(predictions, 'nikkei'),
     sp500: calculateStockStats(predictions, 'sp500'),
+    gold: calculateStockStats(predictions, 'gold'),
+    bitcoin: calculateStockStats(predictions, 'bitcoin'),
   };
 
   return {

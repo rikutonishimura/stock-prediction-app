@@ -22,53 +22,58 @@ interface StockTickerProps {
   nikkeiChange?: number;
   sp500Price?: number;
   sp500Change?: number;
+  goldPrice?: number;
+  goldChange?: number;
+  bitcoinPrice?: number;
+  bitcoinChange?: number;
 }
 
-// 追加の経済指数（ダミーデータ + 実データ）
+// 追加の経済指数（ダミーデータ）
 const ADDITIONAL_INDICES: TickerItem[] = [
   { symbol: 'DJI', name: 'NYダウ', price: 44424.25, change: 0.65, changePercent: 0.65, currency: '$' },
   { symbol: 'IXIC', name: 'NASDAQ', price: 19954.30, change: -0.28, changePercent: -0.28, currency: '$' },
   { symbol: 'VIX', name: '恐怖指数', price: 14.85, change: -2.15, changePercent: -2.15, currency: '' },
   { symbol: 'USDJPY', name: 'ドル円', price: 154.32, change: 0.12, changePercent: 0.08, currency: '¥' },
   { symbol: 'EURJPY', name: 'ユーロ円', price: 162.45, change: -0.23, changePercent: -0.14, currency: '¥' },
-  { symbol: 'GOLD', name: '金先物', price: 2678.50, change: 12.30, changePercent: 0.46, currency: '$' },
   { symbol: 'WTI', name: '原油WTI', price: 73.42, change: -0.85, changePercent: -1.14, currency: '$' },
-  { symbol: 'BTC', name: 'ビットコイン', price: 104250, change: 1.25, changePercent: 1.25, currency: '$' },
 ];
 
-export function StockTicker({ nikkeiPrice, nikkeiChange, sp500Price, sp500Change }: StockTickerProps) {
+export function StockTicker({ nikkeiPrice, nikkeiChange, sp500Price, sp500Change, goldPrice, goldChange, bitcoinPrice, bitcoinChange }: StockTickerProps) {
   const [items, setItems] = useState<TickerItem[]>([]);
 
   useEffect(() => {
     const tickerItems: TickerItem[] = [];
 
-    // 日経平均
     if (nikkeiPrice != null) {
       tickerItems.push({
-        symbol: 'N225',
-        name: '日経平均',
-        price: nikkeiPrice,
-        change: nikkeiChange || 0,
-        changePercent: nikkeiChange || 0,
-        currency: '¥',
+        symbol: 'N225', name: '日経平均', price: nikkeiPrice,
+        change: nikkeiChange || 0, changePercent: nikkeiChange || 0, currency: '¥',
       });
     }
 
-    // S&P500
     if (sp500Price != null) {
       tickerItems.push({
-        symbol: 'SPX',
-        name: 'S&P500',
-        price: sp500Price,
-        change: sp500Change || 0,
-        changePercent: sp500Change || 0,
-        currency: '$',
+        symbol: 'SPX', name: 'S&P500', price: sp500Price,
+        change: sp500Change || 0, changePercent: sp500Change || 0, currency: '$',
       });
     }
 
-    // 追加の指数
+    if (goldPrice != null) {
+      tickerItems.push({
+        symbol: 'GOLD', name: 'ゴールド', price: goldPrice,
+        change: goldChange || 0, changePercent: goldChange || 0, currency: '$',
+      });
+    }
+
+    if (bitcoinPrice != null) {
+      tickerItems.push({
+        symbol: 'BTC', name: 'ビットコイン', price: bitcoinPrice,
+        change: bitcoinChange || 0, changePercent: bitcoinChange || 0, currency: '$',
+      });
+    }
+
     setItems([...tickerItems, ...ADDITIONAL_INDICES]);
-  }, [nikkeiPrice, nikkeiChange, sp500Price, sp500Change]);
+  }, [nikkeiPrice, nikkeiChange, sp500Price, sp500Change, goldPrice, goldChange, bitcoinPrice, bitcoinChange]);
 
   const formatPrice = (price: number, currency: string): string => {
     if (currency === '¥') {

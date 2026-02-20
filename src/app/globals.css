@@ -80,7 +80,7 @@
 }
 
 .dark .main-bg-dark .bg-blue-50 {
-  background-color: rgba(144, 202, 249, 0.1) !important;
+  background-color: rgba(129, 199, 132, 0.1) !important;
 }
 
 .dark .main-bg-dark .bg-blue-100 {
@@ -161,6 +161,20 @@
 
 .dark .confirm-result-btn:hover {
   background-color: rgba(129, 199, 132, 0.25) !important;
+}
+
+/* チェックポイントパネル背景（ダークモード） */
+.dark .checkpoint-bg-dark {
+  background: rgba(251, 191, 36, 0.1) !important;
+}
+
+/* ニュースヘッダー背景（ダークモードのみ） */
+.dark .news-header-japan {
+  background-color: rgba(229, 115, 115, 0.15) !important;
+}
+
+.dark .news-header-us {
+  background-color: rgba(144, 202, 249, 0.15) !important;
 }
 
 /* アクティブタブ（ダークモード：ティッカー風の青） */

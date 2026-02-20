@@ -104,11 +104,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const period = searchParams.get('period') || '3m';
 
-    const [nikkei, sp500, gold, usdjpy] = await Promise.all([
+    const [nikkei, sp500, gold, usdjpy, bitcoin] = await Promise.all([
       fetchStockHistory('^N225', '日経平均', period),
       fetchStockHistory('^GSPC', 'S&P500', period),
       fetchStockHistory('GC=F', 'ゴールド', period),
       fetchStockHistory('JPY=X', 'ドル円', period),
+      fetchStockHistory('BTC-USD', 'ビットコイン', period),
     ]);
 
     return NextResponse.json({
@@ -118,6 +119,7 @@ export async function GET(request: NextRequest) {
         sp500,
         gold,
         usdjpy,
+        bitcoin,
       },
       period,
       timestamp: new Date().toISOString(),

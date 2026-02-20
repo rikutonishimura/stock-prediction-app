@@ -28,6 +28,7 @@ interface UseStockHistoryReturn {
   sp500: StockHistoryData | null;
   gold: StockHistoryData | null;
   usdjpy: StockHistoryData | null;
+  bitcoin: StockHistoryData | null;
   loading: boolean;
   error: string | null;
   period: Period;
@@ -40,6 +41,7 @@ export function useStockHistory(initialPeriod: Period = '3m'): UseStockHistoryRe
   const [sp500, setSp500] = useState<StockHistoryData | null>(null);
   const [gold, setGold] = useState<StockHistoryData | null>(null);
   const [usdjpy, setUsdjpy] = useState<StockHistoryData | null>(null);
+  const [bitcoin, setBitcoin] = useState<StockHistoryData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<Period>(initialPeriod);
@@ -59,6 +61,7 @@ export function useStockHistory(initialPeriod: Period = '3m'): UseStockHistoryRe
         setSp500(result.data.sp500);
         setGold(result.data.gold);
         setUsdjpy(result.data.usdjpy);
+        setBitcoin(result.data.bitcoin);
       } else {
         setError(result.error || 'Failed to fetch stock history');
       }
@@ -88,6 +91,7 @@ export function useStockHistory(initialPeriod: Period = '3m'): UseStockHistoryRe
     sp500,
     gold,
     usdjpy,
+    bitcoin,
     loading,
     error,
     period,

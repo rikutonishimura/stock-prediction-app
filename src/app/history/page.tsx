@@ -54,6 +54,8 @@ export default function HistoryPage() {
     updates: {
       nikkei?: { predictedChange?: number; actualChange?: number | null };
       sp500?: { predictedChange?: number; actualChange?: number | null };
+      gold?: { predictedChange?: number; actualChange?: number | null };
+      bitcoin?: { predictedChange?: number; actualChange?: number | null };
     }
   ) => {
     await edit(id, updates);
@@ -112,6 +114,10 @@ export default function HistoryPage() {
           nikkeiChange={stockData?.nikkei?.changePercent}
           sp500Price={stockData?.sp500?.price}
           sp500Change={stockData?.sp500?.changePercent}
+          goldPrice={stockData?.gold?.price}
+          goldChange={stockData?.gold?.changePercent}
+          bitcoinPrice={stockData?.bitcoin?.price}
+          bitcoinChange={stockData?.bitcoin?.changePercent}
         />
       </div>
 

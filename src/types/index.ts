@@ -6,12 +6,17 @@
  */
 
 /** 対象銘柄の識別子 */
-export type StockSymbol = 'nikkei' | 'sp500';
+export type StockSymbol = 'nikkei' | 'sp500' | 'gold' | 'bitcoin';
+
+/** 予想可能な銘柄一覧 */
+export const PREDICTABLE_SYMBOLS: StockSymbol[] = ['nikkei', 'sp500', 'gold', 'bitcoin'];
 
 /** 銘柄の表示情報 */
 export const STOCK_INFO: Record<StockSymbol, { name: string; symbol: string; currency: string }> = {
   nikkei: { name: '日経平均', symbol: '^N225', currency: '円' },
   sp500: { name: 'S&P500', symbol: '^GSPC', currency: 'USD' },
+  gold: { name: 'ゴールド', symbol: 'GC=F', currency: 'USD' },
+  bitcoin: { name: 'ビットコイン', symbol: 'BTC-USD', currency: 'USD' },
 };
 
 /** 単一銘柄の予想データ */
@@ -32,23 +37,35 @@ export interface PredictionRecord {
   id: string;
   /** 予想日 (YYYY-MM-DD形式) */
   date: string;
-  /** 日経平均の予想 */
-  nikkei: StockPrediction;
-  /** S&P500の予想 */
-  sp500: StockPrediction;
+  /** 日経平均の予想 (未予想時はnull) */
+  nikkei: StockPrediction | null;
+  /** S&P500の予想 (未予想時はnull) */
+  sp500: StockPrediction | null;
+  /** ゴールドの予想 (未予想時はnull) */
+  gold: StockPrediction | null;
+  /** ビットコインの予想 (未予想時はnull) */
+  bitcoin: StockPrediction | null;
   /** 作成日時 (ISO形式) */
   createdAt: string;
   /** 結果確定日時 (ISO形式) - 未確定時はnull */
   confirmedAt: string | null;
 }
 
-/** 予想入力フォームのデータ */
+/** 予想入力フォームのデータ（選択した銘柄のみ） */
 export interface PredictionInput {
-  nikkei: {
+  nikkei?: {
     previousClose: number;
     predictedChange: number;
   };
-  sp500: {
+  sp500?: {
+    previousClose: number;
+    predictedChange: number;
+  };
+  gold?: {
+    previousClose: number;
+    predictedChange: number;
+  };
+  bitcoin?: {
     previousClose: number;
     predictedChange: number;
   };
@@ -91,6 +108,8 @@ export interface StockStats {
 export interface OverallStats {
   nikkei: StockStats;
   sp500: StockStats;
+  gold: StockStats;
+  bitcoin: StockStats;
 }
 
 /** 日別詳細データ（テーブル表示用） */
@@ -103,6 +122,15 @@ export interface DailyDetail {
 
 /** ニュースのカテゴリ */
 export type NewsCategory = 'japan' | 'us';
+
+/** ニュースのAIカテゴリタグ */
+export type NewsTag = '金融政策' | '企業業績' | '経済指標' | '地政学';
+
+/** 市場インパクトの方向 */
+export type NewsSentiment = 'bullish' | 'bearish';
+
+/** 重要度 (1=低, 2=中, 3=高) */
+export type NewsImportance = 1 | 2 | 3;
 
 /** ニュース記事 */
 export interface NewsItem {
@@ -120,11 +148,30 @@ export interface NewsItem {
   publishedAt: string;
   /** カテゴリ */
   category: NewsCategory;
+  /** AIカテゴリタグ (AI未実行時はundefined) */
+  tag?: NewsTag;
+  /** 市場インパクトの方向 (AI未実行時はundefined) */
+  sentiment?: NewsSentiment;
+  /** 重要度 (AI未実行時はundefined) */
+  importance?: NewsImportance;
 }
 
 /** ニュースAPIのレスポンス */
 export interface NewsResponse {
   success: boolean;
   items: NewsItem[];
+  timestamp: string;
+}
+
+/** AI分析APIのレスポンス */
+export interface NewsAnalysisResponse {
+  success: boolean;
+  items: Array<{
+    id: string;
+    tag: NewsTag;
+    sentiment: NewsSentiment;
+    importance: NewsImportance;
+  }>;
+  checkpoint: string | null;
   timestamp: string;
 }

@@ -12,6 +12,8 @@ import type { StockQuote } from '@/types';
 interface StockData {
   nikkei: StockQuote | null;
   sp500: StockQuote | null;
+  gold: StockQuote | null;
+  bitcoin: StockQuote | null;
 }
 
 interface UseStockReturn {
