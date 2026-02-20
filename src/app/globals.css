@@ -165,7 +165,7 @@
 
 /* チェックポイントパネル背景（ダークモード） */
 .dark .checkpoint-bg-dark {
-  background: rgba(251, 191, 36, 0.1) !important;
+  background: #1E1E1E !important;
 }
 
 /* ニュースヘッダー背景（ダークモードのみ） */
