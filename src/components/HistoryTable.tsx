@@ -8,7 +8,7 @@
 
 import type { PredictionRecord, StockSymbol } from '@/types';
 import { STOCK_INFO, PREDICTABLE_SYMBOLS } from '@/types';
-import { formatChange, formatNumber } from '@/lib/stats';
+import { formatChange, formatNumber, getDeviationColorClass } from '@/lib/stats';
 import { useState } from 'react';
 
 interface HistoryTableProps {
@@ -236,11 +236,7 @@ export function HistoryTable({ predictions, onDelete, onEdit }: HistoryTableProp
                     </td>
                     <td className="py-3 px-2 text-sm text-right font-mono">
                       {isConfirmed ? (
-                        <span className={`font-semibold ${
-                          data.deviation! <= 0.5 ? 'text-green-600 dark:text-green-400'
-                            : data.deviation! <= 1.0 ? 'text-yellow-600 dark:text-yellow-400'
-                            : 'text-red-600 dark:text-red-400'
-                        }`}>
+                        <span className={`font-semibold ${getDeviationColorClass(data.deviation!, selectedSymbol)}`}>
                           {formatNumber(data.deviation!)}
                         </span>
                       ) : (

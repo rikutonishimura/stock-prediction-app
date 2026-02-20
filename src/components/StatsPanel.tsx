@@ -6,8 +6,8 @@
 
 'use client';
 
-import type { OverallStats, StockStats } from '@/types';
-import { formatNumber } from '@/lib/stats';
+import type { OverallStats, StockStats, StockSymbol } from '@/types';
+import { formatNumber, getDeviationColorClass, DEVIATION_THRESHOLDS } from '@/lib/stats';
 
 interface StatsPanelProps {
   stats: OverallStats;
@@ -16,9 +16,10 @@ interface StatsPanelProps {
 interface SingleStatsProps {
   title: string;
   stats: StockStats;
+  symbol: StockSymbol;
 }
 
-function SingleStats({ title, stats }: SingleStatsProps) {
+function SingleStats({ title, stats, symbol }: SingleStatsProps) {
   if (stats.confirmedPredictions === 0) {
     return (
       <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-4">
@@ -39,13 +40,7 @@ function SingleStats({ title, stats }: SingleStatsProps) {
         <div className="bg-white dark:bg-slate-800 rounded-md p-3 border border-gray-200 dark:border-slate-700">
           <div className="text-sm text-gray-500 dark:text-gray-400">平均乖離</div>
           <div
-            className={`text-2xl font-bold ${
-              stats.averageDeviation <= 0.5
-                ? 'text-green-600 dark:text-green-400'
-                : stats.averageDeviation <= 1.0
-                ? 'text-yellow-600 dark:text-yellow-400'
-                : 'text-red-600 dark:text-red-400'
-            }`}
+            className={`text-2xl font-bold ${getDeviationColorClass(stats.averageDeviation, symbol)}`}
           >
             {formatNumber(stats.averageDeviation)} <span className="text-base">ポイント</span>
           </div>
@@ -99,28 +94,39 @@ export function StatsPanel({ stats }: StatsPanelProps) {
       <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-6">予測精度の統計</h3>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <SingleStats title="日経平均" stats={stats.nikkei} />
-        <SingleStats title="S&P500" stats={stats.sp500} />
-        <SingleStats title="ゴールド" stats={stats.gold} />
-        <SingleStats title="ビットコイン" stats={stats.bitcoin} />
+        <SingleStats title="日経平均" stats={stats.nikkei} symbol="nikkei" />
+        <SingleStats title="S&P500" stats={stats.sp500} symbol="sp500" />
+        <SingleStats title="ゴールド" stats={stats.gold} symbol="gold" />
+        <SingleStats title="ビットコイン" stats={stats.bitcoin} symbol="bitcoin" />
       </div>
 
       {/* 精度の目安 */}
       <div className="mt-6 p-4 bg-blue-50 dark:bg-slate-700 rounded-lg">
-        <h4 className="font-semibold text-blue-800 dark:text-gray-200 mb-2">乖離の目安</h4>
-        <div className="grid grid-cols-3 gap-2 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-green-500"></span>
-            <span className="text-gray-700 dark:text-gray-300">0.5以下: 優秀</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
-            <span className="text-gray-700 dark:text-gray-300">0.5-1.0: 普通</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-red-500"></span>
-            <span className="text-gray-700 dark:text-gray-300">1.0以上: 要改善</span>
-          </div>
+        <h4 className="font-semibold text-blue-800 dark:text-gray-200 mb-2 text-sm">乖離の目安（銘柄別）</h4>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-gray-500 dark:text-gray-400">
+                <th className="text-left py-1 pr-2"></th>
+                <th className="py-1 px-2"><span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"></span>優秀</span></th>
+                <th className="py-1 px-2"><span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500"></span>普通</span></th>
+                <th className="py-1 px-2"><span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500"></span>要改善</span></th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-700 dark:text-gray-300">
+              {([['日経', 'nikkei'], ['S&P', 'sp500'], ['金', 'gold'], ['BTC', 'bitcoin']] as const).map(([label, sym]) => {
+                const t = DEVIATION_THRESHOLDS[sym];
+                return (
+                  <tr key={sym}>
+                    <td className="py-0.5 pr-2 font-medium">{label}</td>
+                    <td className="py-0.5 px-2 text-center text-green-600 dark:text-green-400">{t.good}以下</td>
+                    <td className="py-0.5 px-2 text-center text-yellow-600 dark:text-yellow-400">{t.good}~{t.fair}</td>
+                    <td className="py-0.5 px-2 text-center text-red-600 dark:text-red-400">{t.fair}超</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

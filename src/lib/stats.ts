@@ -7,6 +7,35 @@
 
 import type { PredictionRecord, StockStats, StockSymbol, DailyDetail } from '@/types';
 
+/** 銘柄別の乖離閾値 */
+export interface DeviationThresholds {
+  good: number;   // これ以下なら「優秀」
+  fair: number;    // これ以下なら「普通」、超えたら「要改善」
+}
+
+/** 銘柄別の乖離閾値マップ */
+export const DEVIATION_THRESHOLDS: Record<StockSymbol, DeviationThresholds> = {
+  nikkei:  { good: 1.0, fair: 2.0 },
+  sp500:   { good: 0.8, fair: 1.5 },
+  gold:    { good: 1.0, fair: 2.0 },
+  bitcoin: { good: 2.0, fair: 4.0 },
+};
+
+/** 乖離値に対応するカラークラスを返す */
+export function getDeviationColorClass(deviation: number, symbol: StockSymbol): string {
+  const t = DEVIATION_THRESHOLDS[symbol];
+  if (deviation <= t.good) return 'text-green-600 dark:text-green-400';
+  if (deviation <= t.fair) return 'text-yellow-600 dark:text-yellow-400';
+  return 'text-red-600 dark:text-red-400';
+}
+
+/** ランキング用（全銘柄平均）の乖離カラークラスを返す */
+export function getRankingDeviationColorClass(deviation: number): string {
+  if (deviation <= 1.2) return 'text-green-600 dark:text-green-400';
+  if (deviation <= 2.5) return 'text-yellow-600 dark:text-yellow-400';
+  return 'text-red-600 dark:text-red-400';
+}
+
 /**
  * 乖離を計算する
  * @param predicted 予想変化率 (%)

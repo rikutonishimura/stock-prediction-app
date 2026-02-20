@@ -36,6 +36,10 @@ interface LatestPrediction {
   sp500PredictedChange: number | null;
   goldPredictedChange: number | null;
   bitcoinPredictedChange: number | null;
+  nikkeiActualChange: number | null;
+  sp500ActualChange: number | null;
+  goldActualChange: number | null;
+  bitcoinActualChange: number | null;
 }
 
 interface RankingUser {
@@ -150,15 +154,32 @@ async function autoConfirmAllPending() {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await autoConfirmAllPending();
 
-    // 全ユーザーの確定済み予想を取得
-    const { data: predictions, error: predictionsError } = await supabase
+    // 期間パラメータ（all=累計, weekly=今週）
+    const { searchParams } = new URL(request.url);
+    const period = searchParams.get('period') || 'all';
+
+    // 週次の場合、今週の月曜日（日本時間）を起点にフィルタ
+    let weekStartStr: string | null = null;
+    if (period === 'weekly') {
+      const now = new Date();
+      const jstOffset = 9 * 60 * 60 * 1000;
+      const jstNow = new Date(now.getTime() + jstOffset);
+      const day = jstNow.getUTCDay();
+      const diff = day === 0 ? 6 : day - 1; // 月曜日を週の開始に
+      const monday = new Date(jstNow);
+      monday.setUTCDate(monday.getUTCDate() - diff);
+      weekStartStr = monday.toISOString().split('T')[0];
+    }
+
+    // 確定済み予想を取得
+    let predictionsQuery = supabase
       .from('predictions')
       .select(`
-        user_id,
+        user_id, date,
         nikkei_deviation, sp500_deviation, gold_deviation, bitcoin_deviation,
         nikkei_predicted_change, nikkei_actual_change,
         sp500_predicted_change, sp500_actual_change,
@@ -167,6 +188,12 @@ export async function GET() {
         confirmed_at
       `)
       .not('confirmed_at', 'is', null);
+
+    if (weekStartStr) {
+      predictionsQuery = predictionsQuery.gte('date', weekStartStr);
+    }
+
+    const { data: predictions, error: predictionsError } = await predictionsQuery;
 
     if (predictionsError) {
       console.error('Error fetching predictions:', predictionsError);
@@ -199,7 +226,7 @@ export async function GET() {
 
     const { data: latestPredictions, error: latestError } = await supabase
       .from('predictions')
-      .select('user_id, date, nikkei_predicted_change, sp500_predicted_change, gold_predicted_change, bitcoin_predicted_change')
+      .select('user_id, date, nikkei_predicted_change, sp500_predicted_change, gold_predicted_change, bitcoin_predicted_change, nikkei_actual_change, sp500_actual_change, gold_actual_change, bitcoin_actual_change')
       .eq('date', todayStr);
 
     if (latestError) {
@@ -214,6 +241,10 @@ export async function GET() {
         sp500PredictedChange: p.sp500_predicted_change != null ? Number(p.sp500_predicted_change) : null,
         goldPredictedChange: p.gold_predicted_change != null ? Number(p.gold_predicted_change) : null,
         bitcoinPredictedChange: p.bitcoin_predicted_change != null ? Number(p.bitcoin_predicted_change) : null,
+        nikkeiActualChange: p.nikkei_actual_change != null ? Number(p.nikkei_actual_change) : null,
+        sp500ActualChange: p.sp500_actual_change != null ? Number(p.sp500_actual_change) : null,
+        goldActualChange: p.gold_actual_change != null ? Number(p.gold_actual_change) : null,
+        bitcoinActualChange: p.bitcoin_actual_change != null ? Number(p.bitcoin_actual_change) : null,
       });
     });
 

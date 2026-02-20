@@ -10,7 +10,7 @@
 import { useState } from 'react';
 import type { PredictionRecord, StockQuote, StockSymbol } from '@/types';
 import { STOCK_INFO, PREDICTABLE_SYMBOLS } from '@/types';
-import { formatChange, formatNumber } from '@/lib/stats';
+import { formatChange, formatNumber, getDeviationColorClass } from '@/lib/stats';
 
 interface ResultCardProps {
   prediction: PredictionRecord;
@@ -42,6 +42,7 @@ interface ResultCardProps {
 
 interface SingleResultProps {
   title: string;
+  symbol: StockSymbol;
   predicted: number;
   actual: number | null;
   deviation: number | null;
@@ -55,7 +56,7 @@ interface SingleResultProps {
 }
 
 function SingleResult({
-  title, predicted, actual, deviation, previousClose, currency,
+  title, symbol, predicted, actual, deviation, previousClose, currency,
   currentChange, onConfirm, isEditing, editValues, onEditChange,
 }: SingleResultProps) {
   const isConfirmed = actual !== null;
@@ -113,11 +114,7 @@ function SingleResult({
             <hr className="my-2 dark:border-slate-600" />
             <div className="flex justify-between items-center">
               <span className="text-gray-600 dark:text-gray-300">乖離:</span>
-              <span className={`font-mono font-bold text-lg ${
-                deviation! <= 0.5 ? 'text-green-600 dark:text-green-400'
-                  : deviation! <= 1.0 ? 'text-yellow-600 dark:text-yellow-400'
-                  : 'text-red-600 dark:text-red-400'
-              }`}>
+              <span className={`font-mono font-bold text-lg ${getDeviationColorClass(deviation!, symbol)}`}>
                 {formatNumber(deviation!)} ポイント
               </span>
             </div>
@@ -258,6 +255,7 @@ export function ResultCard({ prediction, stockData, onUpdateResult, onEdit }: Re
                 <SingleResult
                   key={symbol}
                   title={STOCK_INFO[symbol].name}
+                  symbol={symbol}
                   predicted={p.predictedChange}
                   actual={p.actualChange}
                   deviation={p.deviation}
@@ -287,6 +285,7 @@ export function ResultCard({ prediction, stockData, onUpdateResult, onEdit }: Re
               <SingleResult
                 key={symbol}
                 title={STOCK_INFO[symbol].name}
+                symbol={symbol}
                 predicted={p.predictedChange}
                 actual={p.actualChange}
                 deviation={p.deviation}

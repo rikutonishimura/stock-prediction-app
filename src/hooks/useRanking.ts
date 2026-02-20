@@ -6,10 +6,18 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+export type RankingPeriod = 'all' | 'weekly';
+
 export interface LatestPrediction {
   date: string;
   nikkeiPredictedChange: number | null;
   sp500PredictedChange: number | null;
+  goldPredictedChange: number | null;
+  bitcoinPredictedChange: number | null;
+  nikkeiActualChange: number | null;
+  sp500ActualChange: number | null;
+  goldActualChange: number | null;
+  bitcoinActualChange: number | null;
 }
 
 export interface RankingUser {
@@ -40,6 +48,8 @@ interface UseRankingReturn {
   registeredUsers: RegisteredUser[];
   loading: boolean;
   error: string | null;
+  period: RankingPeriod;
+  setPeriod: (period: RankingPeriod) => void;
   refetch: () => void;
 }
 
@@ -49,13 +59,14 @@ export function useRanking(): UseRankingReturn {
   const [registeredUsers, setRegisteredUsers] = useState<RegisteredUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [period, setPeriod] = useState<RankingPeriod>('all');
 
-  const fetchRankings = useCallback(async (signal?: AbortSignal) => {
+  const fetchRankings = useCallback(async (p: RankingPeriod, signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/ranking', { signal });
+      const response = await fetch(`/api/ranking?period=${p}`, { signal });
       if (signal?.aborted) return;
       if (!response.ok) {
         throw new Error('ランキングの取得に失敗しました');
@@ -68,7 +79,6 @@ export function useRanking(): UseRankingReturn {
       setRegisteredUsers(data.registeredUsers || []);
       setLoading(false);
     } catch (err) {
-      // AbortErrorは無視（コンポーネントのアンマウント時など）
       if (err instanceof DOMException && err.name === 'AbortError') {
         return;
       }
@@ -82,9 +92,9 @@ export function useRanking(): UseRankingReturn {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchRankings(controller.signal);
+    fetchRankings(period, controller.signal);
     return () => controller.abort('component unmounted');
-  }, [fetchRankings]);
+  }, [fetchRankings, period]);
 
   return {
     rankings,
@@ -92,6 +102,8 @@ export function useRanking(): UseRankingReturn {
     registeredUsers,
     loading,
     error,
-    refetch: () => fetchRankings(),
+    period,
+    setPeriod,
+    refetch: () => fetchRankings(period),
   };
 }

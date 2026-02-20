@@ -6,8 +6,8 @@
 
 'use client';
 
-import { useRanking, RankingUser, RegisteredUser } from '@/hooks/useRanking';
-import { formatNumber } from '@/lib/stats';
+import { useRanking, RankingUser, RegisteredUser, RankingPeriod } from '@/hooks/useRanking';
+import { formatNumber, getRankingDeviationColorClass, DEVIATION_THRESHOLDS } from '@/lib/stats';
 import { useAuth } from '@/hooks/useAuth';
 
 interface RankingRowProps {
@@ -55,13 +55,7 @@ function RankingRow({ rank, user, isCurrentUser }: RankingRowProps) {
       </td>
       <td className="py-3 px-3 text-right font-mono">
         <span
-          className={`font-semibold ${
-            user.averageDeviation <= 0.5
-              ? 'text-green-600 dark:text-green-400'
-              : user.averageDeviation <= 1.0
-              ? 'text-yellow-600 dark:text-yellow-400'
-              : 'text-red-600 dark:text-red-400'
-          }`}
+          className={`font-semibold ${getRankingDeviationColorClass(user.averageDeviation)}`}
         >
           {formatNumber(user.averageDeviation)}
         </span>
@@ -94,12 +88,42 @@ function RankingRow({ rank, user, isCurrentUser }: RankingRowProps) {
           <span className="text-gray-400 dark:text-gray-500 text-xs">未入力</span>
         )}
       </td>
+      <td className="py-3 px-3 text-center">
+        {user.latestPrediction ? (
+          <div className="flex flex-col gap-0.5 text-xs">
+            {([
+              ['nikkeiPredictedChange', 'nikkeiActualChange', '日経'] as const,
+              ['sp500PredictedChange', 'sp500ActualChange', 'S&P'] as const,
+              ['goldPredictedChange', 'goldActualChange', '金'] as const,
+              ['bitcoinPredictedChange', 'bitcoinActualChange', 'BTC'] as const,
+            ]).map(([predictedKey, actualKey, label]) => {
+              const predicted = user.latestPrediction![predictedKey as keyof typeof user.latestPrediction] as number | null;
+              if (predicted == null) return null;
+              const actual = user.latestPrediction![actualKey as keyof typeof user.latestPrediction] as number | null;
+              if (actual == null) {
+                return (
+                  <span key={actualKey} className="font-mono text-gray-400 dark:text-gray-500">
+                    {label}: ---
+                  </span>
+                );
+              }
+              return (
+                <span key={actualKey} className={`font-mono ${actual >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {label}: {actual >= 0 ? '+' : ''}{actual.toFixed(2)}%
+                </span>
+              );
+            })}
+          </div>
+        ) : (
+          <span className="text-gray-400 dark:text-gray-500 text-xs">-</span>
+        )}
+      </td>
     </tr>
   );
 }
 
 export function RankingPanel() {
-  const { rankings, totalUsers, registeredUsers, loading, error, refetch } = useRanking();
+  const { rankings, totalUsers, registeredUsers, loading, error, period, setPeriod, refetch } = useRanking();
   const { user } = useAuth();
 
   // 日付をフォーマット
@@ -129,7 +153,7 @@ export function RankingPanel() {
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4">
         <div>
           <h3 className="text-xl font-bold text-gray-800 dark:text-white">予測精度ランキング</h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -145,6 +169,26 @@ export function RankingPanel() {
         </button>
       </div>
 
+      {/* 期間切り替えタブ */}
+      <div className="flex gap-2 mb-6">
+        {([
+          ['all', '累計'] as const,
+          ['weekly', '週次'] as const,
+        ]).map(([value, label]) => (
+          <button
+            key={value}
+            onClick={() => setPeriod(value)}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              period === value
+                ? 'bg-blue-600 text-white active-tab-btn'
+                : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-600'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
         <div className="animate-pulse space-y-3">
           {[...Array(5)].map((_, i) => (
@@ -153,7 +197,7 @@ export function RankingPanel() {
         </div>
       ) : rankings.length === 0 ? (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          まだランキングデータがありません
+          {period === 'weekly' ? '今週の確定済みデータがまだありません' : 'まだランキングデータがありません'}
         </div>
       ) : (
         <>
@@ -179,6 +223,9 @@ export function RankingPanel() {
                   <th className="text-center py-3 px-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
                     本日の予想
                   </th>
+                  <th className="text-center py-3 px-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
+                    本日の結果
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -199,22 +246,31 @@ export function RankingPanel() {
           </div>
 
           {/* 凡例 */}
-          <div className="mt-4 p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
-            <h4 className="font-semibold text-gray-700 dark:text-gray-400 mb-2 text-sm">乖離の目安</h4>
-            <div className="flex flex-wrap gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                <span className="text-gray-600 dark:text-gray-400">0.5以下: 優秀</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
-                <span className="text-gray-600 dark:text-gray-400">0.5-1.0: 普通</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-red-500"></span>
-                <span className="text-gray-600 dark:text-gray-400">1.0以上: 要改善</span>
-              </div>
-            </div>
+          <div className="mt-4 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
+            <h4 className="font-semibold text-gray-700 dark:text-gray-400 mb-2 text-sm">乖離の目安（銘柄別）</h4>
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-gray-500 dark:text-gray-400">
+                  <th className="text-left py-1 pr-2"></th>
+                  <th className="py-1 px-1"><span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"></span>優秀</span></th>
+                  <th className="py-1 px-1"><span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500"></span>普通</span></th>
+                  <th className="py-1 px-1"><span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500"></span>要改善</span></th>
+                </tr>
+              </thead>
+              <tbody className="text-gray-600 dark:text-gray-400">
+                {([['日経', 'nikkei'], ['S&P', 'sp500'], ['金', 'gold'], ['BTC', 'bitcoin']] as const).map(([label, sym]) => {
+                  const t = DEVIATION_THRESHOLDS[sym];
+                  return (
+                    <tr key={sym}>
+                      <td className="py-0.5 pr-2 font-medium">{label}</td>
+                      <td className="py-0.5 px-1 text-center text-green-600 dark:text-green-400">{t.good}以下</td>
+                      <td className="py-0.5 px-1 text-center text-yellow-600 dark:text-yellow-400">{t.good}~{t.fair}</td>
+                      <td className="py-0.5 px-1 text-center text-red-600 dark:text-red-400">{t.fair}超</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
 
           {/* 登録ユーザー一覧 */}
