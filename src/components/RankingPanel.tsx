@@ -170,7 +170,7 @@ export function RankingPanel() {
       </div>
 
       {/* 期間切り替えタブ */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex items-center gap-2 mb-6">
         {([
           ['all', '累計'] as const,
           ['weekly', '週次'] as const,
@@ -187,6 +187,22 @@ export function RankingPanel() {
             {label}
           </button>
         ))}
+        {period === 'weekly' && (
+          <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+            {(() => {
+              const now = new Date();
+              const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+              const day = jst.getUTCDay();
+              const diff = day === 0 ? 6 : day - 1;
+              const monday = new Date(jst);
+              monday.setUTCDate(monday.getUTCDate() - diff);
+              const sunday = new Date(monday);
+              sunday.setUTCDate(sunday.getUTCDate() + 6);
+              const fmt = (d: Date) => `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
+              return `${fmt(monday)}（月）〜 ${fmt(sunday)}（日）`;
+            })()}
+          </span>
+        )}
       </div>
 
       {loading ? (
