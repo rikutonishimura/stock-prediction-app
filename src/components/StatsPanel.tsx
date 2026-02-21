@@ -101,27 +101,41 @@ export function StatsPanel({ stats }: StatsPanelProps) {
       </div>
 
       {/* 精度の目安 */}
-      <div className="mt-6 p-4 bg-blue-50 dark:bg-slate-700 rounded-lg">
-        <h4 className="font-semibold text-blue-800 dark:text-gray-200 mb-2 text-sm">乖離の目安（銘柄別）</h4>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+      <div className="mt-6 rounded-xl border border-gray-200 dark:border-slate-600 bg-[#F8FAFC] dark:bg-slate-750 shadow-sm overflow-hidden">
+        <div className="px-5 py-3 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800">
+          <h4 className="font-bold text-gray-800 dark:text-gray-100 text-sm">乖離の目安（銘柄別）</h4>
+        </div>
+        <div className="p-4">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="text-gray-500 dark:text-gray-400">
-                <th className="text-left py-1 pr-2"></th>
-                <th className="py-1 px-2"><span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"></span>優秀</span></th>
-                <th className="py-1 px-2"><span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500"></span>普通</span></th>
-                <th className="py-1 px-2"><span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500"></span>要改善</span></th>
+              <tr>
+                <th className="text-left py-2 pr-3 text-gray-500 dark:text-gray-400 font-medium text-xs">銘柄</th>
+                <th className="py-2 px-3 text-center">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
+                    優秀
+                  </span>
+                </th>
+                <th className="py-2 px-3 text-center">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
+                    普通
+                  </span>
+                </th>
+                <th className="py-2 px-3 text-center">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400">
+                    要改善
+                  </span>
+                </th>
               </tr>
             </thead>
-            <tbody className="text-gray-700 dark:text-gray-300">
-              {([['日経', 'nikkei'], ['S&P', 'sp500'], ['金', 'gold'], ['BTC', 'bitcoin']] as const).map(([label, sym]) => {
+            <tbody>
+              {([['日経平均', 'nikkei'], ['S&P500', 'sp500'], ['ゴールド', 'gold'], ['ビットコイン', 'bitcoin']] as const).map(([label, sym]) => {
                 const t = DEVIATION_THRESHOLDS[sym];
                 return (
-                  <tr key={sym}>
-                    <td className="py-0.5 pr-2 font-medium">{label}</td>
-                    <td className="py-0.5 px-2 text-center text-green-600 dark:text-green-400">{t.good}以下</td>
-                    <td className="py-0.5 px-2 text-center text-yellow-600 dark:text-yellow-400">{t.good}~{t.fair}</td>
-                    <td className="py-0.5 px-2 text-center text-red-600 dark:text-red-400">{t.fair}超</td>
+                  <tr key={sym} className="border-t border-gray-100 dark:border-slate-700">
+                    <td className="py-2.5 pr-3 font-bold text-gray-800 dark:text-gray-200">{label}</td>
+                    <td className="py-2.5 px-3 text-center font-mono text-green-600 dark:text-green-400">{t.good}以下</td>
+                    <td className="py-2.5 px-3 text-center font-mono text-amber-600 dark:text-amber-400">{t.good}~{t.fair}</td>
+                    <td className="py-2.5 px-3 text-center font-mono text-red-600 dark:text-red-400">{t.fair}超</td>
                   </tr>
                 );
               })}
