@@ -9,7 +9,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { HistoryTable, StatsPanel, StockTicker, ThemeToggle, UserMenu } from '@/components';
+import { HistoryTable, StatsPanel, StockTicker, ThemeToggle, UserMenu, WeeklyReportPanel } from '@/components';
 import { usePredictions } from '@/hooks/usePredictions';
 import { useStock } from '@/hooks/useStock';
 import { useAuth } from '@/hooks/useAuth';
@@ -127,6 +127,9 @@ export default function HistoryPage() {
         <div className="space-y-8">
           {/* 統計パネル */}
           <StatsPanel stats={stats} />
+
+          {/* 週間レポート */}
+          <WeeklyReportPanel predictions={predictions} />
 
           {/* 履歴テーブル */}
           <HistoryTable predictions={predictions} onDelete={handleDelete} onEdit={handleEdit} />

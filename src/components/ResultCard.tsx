@@ -38,6 +38,7 @@ interface ResultCardProps {
       bitcoin?: { predictedChange?: number; actualChange?: number | null };
     }
   ) => void;
+  onSaveComment?: (id: string, comment: string) => void;
 }
 
 interface SingleResultProps {
@@ -156,7 +157,7 @@ const getCurrency = (symbol: StockSymbol): string => {
   return symbol === 'nikkei' ? '¥' : '$';
 };
 
-export function ResultCard({ prediction, stockData, onUpdateResult, onEdit }: ResultCardProps) {
+export function ResultCard({ prediction, stockData, onUpdateResult, onEdit, onSaveComment }: ResultCardProps) {
   const predictedAssets = PREDICTABLE_SYMBOLS.filter(s => prediction[s] != null);
 
   type EditState = Record<StockSymbol, { predictedPrice: string; actualPrice: string }>;
@@ -178,6 +179,9 @@ export function ResultCard({ prediction, stockData, onUpdateResult, onEdit }: Re
 
   const [isEditing, setIsEditing] = useState(false);
   const [editValues, setEditValues] = useState<EditState>(buildEditValues);
+  const [commentText, setCommentText] = useState(prediction.reviewComment || '');
+  const [isEditingComment, setIsEditingComment] = useState(false);
+  const [savingComment, setSavingComment] = useState(false);
 
   const handleConfirm = (symbol: StockSymbol) => {
     const quote = stockData?.[symbol];
@@ -300,6 +304,71 @@ export function ResultCard({ prediction, stockData, onUpdateResult, onEdit }: Re
               />
             );
           })}
+        </div>
+      )}
+
+      {/* 振り返りコメント（確定済みの場合のみ表示） */}
+      {prediction.confirmedAt && onSaveComment && (
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
+          {isEditingComment ? (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                振り返りメモ
+              </label>
+              <textarea
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="なぜ外れたか、次回の改善点など..."
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white dark:bg-slate-700 dark:text-white resize-none"
+              />
+              <div className="flex justify-end gap-2 mt-2">
+                <button
+                  onClick={() => {
+                    setCommentText(prediction.reviewComment || '');
+                    setIsEditingComment(false);
+                  }}
+                  className="px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-600 rounded transition-colors"
+                >
+                  キャンセル
+                </button>
+                <button
+                  disabled={savingComment}
+                  onClick={async () => {
+                    setSavingComment(true);
+                    await onSaveComment(prediction.id, commentText);
+                    setSavingComment(false);
+                    setIsEditingComment(false);
+                  }}
+                  className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                >
+                  {savingComment ? '保存中...' : '保存'}
+                </button>
+              </div>
+            </div>
+          ) : prediction.reviewComment ? (
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">振り返りメモ</span>
+                <button
+                  onClick={() => setIsEditingComment(true)}
+                  className="text-xs text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                >
+                  編集
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-slate-700 rounded-md p-3 whitespace-pre-wrap">
+                {prediction.reviewComment}
+              </p>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsEditingComment(true)}
+              className="w-full py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-md transition-colors border border-dashed border-gray-300 dark:border-slate-600"
+            >
+              振り返りメモを追加
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -206,6 +206,7 @@ export function HistoryTable({ predictions, onDelete, onEdit }: HistoryTableProp
                 <th className="text-right py-3 px-2 text-sm font-semibold text-gray-600 dark:text-gray-300">予想</th>
                 <th className="text-right py-3 px-2 text-sm font-semibold text-gray-600 dark:text-gray-300">実際</th>
                 <th className="text-right py-3 px-2 text-sm font-semibold text-gray-600 dark:text-gray-300">乖離</th>
+                <th className="text-center py-3 px-2 text-sm font-semibold text-gray-600 dark:text-gray-300">メモ</th>
                 {(onDelete || onEdit) && (
                   <th className="text-center py-3 px-2 text-sm font-semibold text-gray-600 dark:text-gray-300">操作</th>
                 )}
@@ -241,6 +242,15 @@ export function HistoryTable({ predictions, onDelete, onEdit }: HistoryTableProp
                         </span>
                       ) : (
                         <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-2 text-center">
+                      {prediction.reviewComment ? (
+                        <span title={prediction.reviewComment} className="cursor-help text-blue-500 dark:text-blue-400">
+                          💬
+                        </span>
+                      ) : (
+                        <span className="text-gray-300 dark:text-gray-600">-</span>
                       )}
                     </td>
                     {(onDelete || onEdit) && (

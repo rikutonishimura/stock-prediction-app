@@ -19,7 +19,7 @@ import type { PredictionInput } from '@/types';
 
 export default function Home() {
   const { data: stockData, loading: stockLoading, error: stockError, refetch } = useStock();
-  const { predictions, todayPrediction, stats, add, updateResult, edit, refresh } = usePredictions({ stockData });
+  const { predictions, todayPrediction, stats, add, updateResult, edit, saveComment, refresh } = usePredictions({ stockData });
   const [activeTab, setActiveTab] = useState<'predict' | 'stats'>('predict');
   const { items: japanNews, loading: japanNewsLoading, error: japanNewsError, refetch: refetchJapanNews } = useNews('japan');
   const { items: usNews, loading: usNewsLoading, error: usNewsError, refetch: refetchUsNews } = useNews('us');
@@ -240,6 +240,7 @@ export default function Home() {
                     stockData={stockData}
                     onUpdateResult={handleUpdateResult}
                     onEdit={handleEdit}
+                    onSaveComment={saveComment}
                   />
                 )}
 
@@ -254,6 +255,7 @@ export default function Home() {
                       stockData={stockData}
                       onUpdateResult={handleUpdateResult}
                       onEdit={handleEdit}
+                      onSaveComment={saveComment}
                     />
                   ))}
               </div>

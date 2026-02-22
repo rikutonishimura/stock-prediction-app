@@ -18,6 +18,7 @@ import {
   deletePrediction,
   getPendingPredictions,
   editPrediction,
+  saveReviewComment,
 } from '@/lib/supabase-storage';
 import { calculateStockStats } from '@/lib/stats';
 import { canAutoConfirm } from '@/lib/marketHours';
@@ -60,6 +61,7 @@ interface UsePredictionsReturn {
     }
   ) => Promise<PredictionRecord | null>;
   remove: (id: string) => Promise<boolean>;
+  saveComment: (id: string, comment: string) => Promise<PredictionRecord | null>;
   refresh: () => void;
 }
 
@@ -252,6 +254,19 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
     [user]
   );
 
+  const saveCommentFn = useCallback(async (id: string, comment: string): Promise<PredictionRecord | null> => {
+    if (!user) return null;
+
+    const updated = await saveReviewComment(user.id, id, comment);
+    if (updated) {
+      setPredictions(prev => prev.map(p => (p.id === id ? updated : p)));
+      if (todayPrediction?.id === id) {
+        setTodayPrediction(updated);
+      }
+    }
+    return updated;
+  }, [user, todayPrediction]);
+
   const stats: OverallStats = {
     nikkei: calculateStockStats(predictions, 'nikkei'),
     sp500: calculateStockStats(predictions, 'sp500'),
@@ -269,6 +284,7 @@ export function usePredictions(options: UsePredictionsOptions = {}): UsePredicti
     updateResult: updateResultFn,
     edit: editFn,
     remove,
+    saveComment: saveCommentFn,
     refresh: loadData,
   };
 }

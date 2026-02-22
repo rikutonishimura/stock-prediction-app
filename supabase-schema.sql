@@ -29,12 +29,16 @@ create table if not exists predictions (
   bitcoin_predicted_change numeric,
   bitcoin_actual_change numeric,
   bitcoin_deviation numeric,
+  review_comment text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   confirmed_at timestamp with time zone,
 
   -- 同じユーザーが同じ日に複数の予想を作成できないようにする
   unique(user_id, date)
 );
+
+-- 9. 振り返りコメントカラム追加マイグレーション（既存テーブルに対して実行）
+-- ALTER TABLE predictions ADD COLUMN IF NOT EXISTS review_comment text;
 
 -- 7. Gold/Bitcoinカラム追加マイグレーション（既存テーブルに対して実行）
 -- ALTER TABLE predictions ADD COLUMN IF NOT EXISTS gold_previous_close numeric;

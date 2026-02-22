@@ -29,6 +29,7 @@ function rowToRecord(row: Record<string, unknown>): PredictionRecord {
     sp500: assetFromRow(row, 'sp500'),
     gold: assetFromRow(row, 'gold'),
     bitcoin: assetFromRow(row, 'bitcoin'),
+    reviewComment: (row.review_comment as string | null) ?? null,
     createdAt: row.created_at as string,
     confirmedAt: row.confirmed_at as string | null,
   };
@@ -316,6 +317,32 @@ export async function editPrediction(
 
   if (error) {
     console.error('Error editing prediction:', error);
+    return null;
+  }
+
+  return rowToRecord(data);
+}
+
+/**
+ * 振り返りコメントを保存
+ */
+export async function saveReviewComment(
+  userId: string,
+  id: string,
+  comment: string
+): Promise<PredictionRecord | null> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from('predictions')
+    .update({ review_comment: comment || null })
+    .eq('id', id)
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error saving review comment:', error);
     return null;
   }
 

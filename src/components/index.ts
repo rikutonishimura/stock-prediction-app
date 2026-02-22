@@ -15,3 +15,4 @@ export { ThemeToggle } from './ThemeToggle';
 export { RankingPanel } from './RankingPanel';
 export { UserMenu } from './UserMenu';
 export { CheckpointPanel } from './CheckpointPanel';
+export { WeeklyReportPanel } from './WeeklyReportPanel';

@@ -45,6 +45,8 @@ export interface PredictionRecord {
   gold: StockPrediction | null;
   /** ビットコインの予想 (未予想時はnull) */
   bitcoin: StockPrediction | null;
+  /** 振り返りコメント */
+  reviewComment: string | null;
   /** 作成日時 (ISO形式) */
   createdAt: string;
   /** 結果確定日時 (ISO形式) - 未確定時はnull */
