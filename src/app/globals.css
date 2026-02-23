@@ -87,6 +87,18 @@
   background-color: rgba(144, 202, 249, 0.15) !important;
 }
 
+.dark .main-bg-dark .bg-purple-100 {
+  background-color: rgba(206, 147, 216, 0.15) !important;
+}
+
+.dark .main-bg-dark .bg-green-100 {
+  background-color: rgba(129, 199, 132, 0.15) !important;
+}
+
+.dark .main-bg-dark .bg-orange-100 {
+  background-color: rgba(255, 183, 77, 0.15) !important;
+}
+
 /* ダークモード: disabled状態の背景 */
 .dark .main-bg-dark .disabled\:bg-gray-400:disabled {
   background-color: #2C2C2C !important;
