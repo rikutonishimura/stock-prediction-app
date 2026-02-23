@@ -99,6 +99,23 @@
   background-color: rgba(255, 183, 77, 0.20) !important;
 }
 
+/* ダークモード: ニュースタグのテキスト色 */
+.dark .main-bg-dark .text-purple-700 {
+  color: #E9D5F5 !important;
+}
+
+.dark .main-bg-dark .text-green-700 {
+  color: #C8E6C9 !important;
+}
+
+.dark .main-bg-dark .text-orange-700 {
+  color: #FFE0B2 !important;
+}
+
+.dark .main-bg-dark .text-blue-700 {
+  color: #90CAF9 !important;
+}
+
 /* ダークモード: disabled状態の背景 */
 .dark .main-bg-dark .disabled\:bg-gray-400:disabled {
   background-color: #2C2C2C !important;
