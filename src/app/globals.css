@@ -170,11 +170,11 @@
 
 /* ニュースヘッダー背景（ダークモードのみ） */
 .dark .news-header-japan {
-  background-color: rgba(229, 115, 115, 0.15) !important;
+  background-color: rgba(229, 115, 115, 0.40) !important;
 }
 
 .dark .news-header-us {
-  background-color: rgba(144, 202, 249, 0.15) !important;
+  background-color: rgba(144, 202, 249, 0.40) !important;
 }
 
 /* アクティブタブ（ダークモード：ティッカー風の青） */

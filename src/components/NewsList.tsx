@@ -9,10 +9,10 @@
 import type { NewsItem, NewsCategory, NewsTag } from '@/types';
 
 const TAG_COLORS: Record<NewsTag, string> = {
-  '金融政策': 'bg-purple-50 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300',
-  '企業業績': 'bg-green-50 text-green-800 dark:bg-green-900/40 dark:text-green-300',
-  '経済指標': 'bg-blue-50 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
-  '地政学': 'bg-orange-50 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300',
+  '金融政策': 'bg-purple-50 text-purple-800 dark:bg-purple-900/60 dark:text-purple-200',
+  '企業業績': 'bg-green-50 text-green-800 dark:bg-green-900/60 dark:text-green-200',
+  '経済指標': 'bg-blue-50 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200',
+  '地政学': 'bg-orange-50 text-orange-800 dark:bg-orange-900/60 dark:text-orange-200',
 };
 
 interface NewsListProps {
