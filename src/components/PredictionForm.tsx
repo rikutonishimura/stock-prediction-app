@@ -236,7 +236,7 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
             onClick={() => toggleAsset(symbol)}
             className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-colors ${
               selectedAssets.has(symbol)
-                ? 'bg-blue-600 text-white border-blue-600 dark:bg-blue-500 dark:border-blue-500'
+                ? 'bg-blue-600 text-white border-blue-600 asset-selected-btn'
                 : 'bg-white dark:bg-slate-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-slate-500 hover:border-blue-400'
             }`}
           >
@@ -296,7 +296,7 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
       <button
         type="submit"
         disabled={disabled || isSubmitting || !hasSelectedData}
-        className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-slate-700 dark:disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+        className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-slate-700 dark:disabled:text-gray-400 disabled:cursor-not-allowed transition-colors submit-prediction-btn"
       >
         {disabled ? '本日は入力済みです' : isSubmitting ? '登録中...' : '予想を登録'}
       </button>

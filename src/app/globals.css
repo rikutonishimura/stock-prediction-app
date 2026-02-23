@@ -192,6 +192,23 @@
   background-color: rgba(129, 199, 132, 0.25) !important;
 }
 
+/* 銘柄選択ボタン（ダークモード：選択時） */
+.dark .asset-selected-btn {
+  color: #90CAF9 !important;
+  background-color: rgba(144, 202, 249, 0.15) !important;
+  border-color: rgba(144, 202, 249, 0.4) !important;
+}
+
+/* 予想を登録ボタン（ダークモード：ティッカー風の青） */
+.dark .submit-prediction-btn {
+  color: #90CAF9 !important;
+  background-color: rgba(144, 202, 249, 0.15) !important;
+}
+
+.dark .submit-prediction-btn:hover:not(:disabled) {
+  background-color: rgba(144, 202, 249, 0.25) !important;
+}
+
 /* チェックポイントパネル背景（ダークモード） */
 .dark .checkpoint-bg-dark {
   background: #1E1E1E !important;
