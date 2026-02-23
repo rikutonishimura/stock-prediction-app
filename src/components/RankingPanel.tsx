@@ -262,8 +262,8 @@ export function RankingPanel() {
           </div>
 
           {/* 凡例 */}
-          <div className="mt-4 rounded-xl border border-gray-200 dark:border-slate-600 bg-[#F8FAFC] dark:bg-slate-750 shadow-sm overflow-hidden">
-            <div className="px-5 py-3 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800">
+          <div className="mt-4 rounded-xl border border-gray-200 dark:border-slate-600 bg-[#F8FAFC] dark:bg-slate-800 shadow-sm overflow-hidden">
+            <div className="px-5 py-3 border-b border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700">
               <h4 className="font-bold text-gray-800 dark:text-gray-100 text-sm">乖離の目安（銘柄別）</h4>
             </div>
             <div className="p-4">
