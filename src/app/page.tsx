@@ -173,7 +173,7 @@ export default function Home() {
                   {stockLoading ? '更新中...' : '株価を更新'}
                 </button>
               </div>
-              <ol className="list-decimal list-inside space-y-1 text-sm text-blue-700 dark:text-gray-200">
+              <ol className="list-decimal list-inside space-y-1 text-sm text-blue-600 dark:text-gray-200">
                 <li>市場調査：左右のニュースやチャートから、今日の米国・日本市場の終値を予想する</li>
                 <li>予想登録：本日の予想終値を入力し、「予想を登録」ボタンをクリック</li>
                 <li>精度向上：統計・履歴タブで、実績との乖離を確認して予測の癖を改善する</li>
