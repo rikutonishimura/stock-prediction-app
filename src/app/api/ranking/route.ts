@@ -290,6 +290,7 @@ export async function GET(request: Request) {
 
     const rankings: RankingUser[] = [];
 
+    // 確定済みデータがあるユーザーをランキングに追加
     userStatsMap.forEach((stats, userId) => {
       if (stats.deviations.length === 0) return;
 
@@ -309,7 +310,27 @@ export async function GET(request: Request) {
       });
     });
 
-    rankings.sort((a, b) => a.averageDeviation - b.averageDeviation);
+    // 本日の予想があるが確定済みデータがないユーザーもランキングに追加
+    latestPredictionMap.forEach((latestPred, userId) => {
+      if (userStatsMap.has(userId)) return; // 既にランキングに含まれている
+      rankings.push({
+        userId,
+        userName: profileMap.get(userId) || '匿名ユーザー',
+        averageDeviation: -1, // 未確定を示すフラグ
+        totalPredictions: 0,
+        confirmedPredictions: 0,
+        directionAccuracy: -1,
+        latestPrediction: latestPred,
+      });
+    });
+
+    // 確定済みユーザーを乖離順でソート、未確定ユーザーは末尾に
+    rankings.sort((a, b) => {
+      if (a.averageDeviation === -1 && b.averageDeviation === -1) return 0;
+      if (a.averageDeviation === -1) return 1;
+      if (b.averageDeviation === -1) return -1;
+      return a.averageDeviation - b.averageDeviation;
+    });
 
     return NextResponse.json({
       rankings: rankings.slice(0, 50),

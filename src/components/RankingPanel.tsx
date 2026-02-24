@@ -37,7 +37,9 @@ function RankingRow({ rank, user, isCurrentUser }: RankingRowProps) {
       }`}
     >
       <td className="py-3 px-3 text-center">
-        {medal ? (
+        {user.averageDeviation === -1 ? (
+          <span className="text-gray-400 dark:text-gray-500 font-medium">-</span>
+        ) : medal ? (
           <span className="text-lg">{medal}</span>
         ) : (
           <span className="text-gray-500 dark:text-gray-400 font-medium">{rank}</span>
@@ -54,17 +56,25 @@ function RankingRow({ rank, user, isCurrentUser }: RankingRowProps) {
         </span>
       </td>
       <td className="py-3 px-3 text-right font-mono">
-        <span
-          className={`font-semibold ${getRankingDeviationColorClass(user.averageDeviation)}`}
-        >
-          {formatNumber(user.averageDeviation)}
-        </span>
+        {user.averageDeviation === -1 ? (
+          <span className="text-gray-400 dark:text-gray-500">---</span>
+        ) : (
+          <span
+            className={`font-semibold ${getRankingDeviationColorClass(user.averageDeviation)}`}
+          >
+            {formatNumber(user.averageDeviation)}
+          </span>
+        )}
       </td>
       <td className="py-3 px-3 text-right font-mono dark:text-gray-300">
-        {formatNumber(user.directionAccuracy)}%
+        {user.directionAccuracy === -1 ? (
+          <span className="text-gray-400 dark:text-gray-500">---</span>
+        ) : (
+          <>{formatNumber(user.directionAccuracy)}%</>
+        )}
       </td>
       <td className="py-3 px-3 text-right text-gray-500 dark:text-gray-400">
-        {user.confirmedPredictions}回
+        {user.confirmedPredictions === 0 ? '---' : `${user.confirmedPredictions}回`}
       </td>
       <td className="py-3 px-3 text-center">
         {user.latestPrediction ? (
