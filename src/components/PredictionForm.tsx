@@ -34,6 +34,18 @@ interface PredictionFormProps {
   disabled?: boolean;
 }
 
+/** 土日かどうかを判定（日本時間基準） */
+function isWeekend(): boolean {
+  const now = new Date();
+  const jstOffset = 9 * 60;
+  const jst = new Date(now.getTime() + (jstOffset + now.getTimezoneOffset()) * 60000);
+  const day = jst.getDay();
+  return day === 0 || day === 6;
+}
+
+/** 土日に閉場する銘柄（ビットコインは24/7なので除外） */
+const WEEKEND_CLOSED: Set<StockSymbol> = new Set(['nikkei', 'sp500', 'gold']);
+
 export function PredictionForm({ stockData, onSubmit, disabled }: PredictionFormProps) {
   const [inputMode, setInputMode] = useState<InputMode>('price');
   const [selectedAssets, setSelectedAssets] = useState<Set<StockSymbol>>(new Set(['nikkei', 'sp500']));
@@ -43,6 +55,22 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
   const [showModal, setShowModal] = useState(false);
   const [submittedAssets, setSubmittedAssets] = useState<SubmittedAsset[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const weekend = isWeekend();
+
+  // 土日は休場銘柄の選択を解除し、ビットコインを選択
+  useEffect(() => {
+    if (weekend) {
+      setSelectedAssets(prev => {
+        const next = new Set<StockSymbol>();
+        for (const s of prev) {
+          if (!WEEKEND_CLOSED.has(s)) next.add(s);
+        }
+        if (next.size === 0) next.add('bitcoin');
+        return next;
+      });
+    }
+  }, [weekend]);
 
   useEffect(() => {
     setValues({ nikkei: '', sp500: '', gold: '', bitcoin: '' });
@@ -227,22 +255,35 @@ export function PredictionForm({ stockData, onSubmit, disabled }: PredictionForm
         </div>
       </div>
 
+      {/* 土日の市場休場メッセージ */}
+      {weekend && (
+        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-md text-sm">
+          本日は土日のため、株式・ゴールド市場は休場です。ビットコインのみ予想できます。
+        </div>
+      )}
+
       {/* 銘柄選択 */}
       <div className="flex flex-wrap gap-2 mb-6">
-        {PREDICTABLE_SYMBOLS.map(symbol => (
-          <button
-            key={symbol}
-            type="button"
-            onClick={() => toggleAsset(symbol)}
-            className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-colors ${
-              selectedAssets.has(symbol)
-                ? 'bg-blue-600 text-white border-blue-600 asset-selected-btn'
-                : 'bg-white dark:bg-slate-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-slate-500 hover:border-blue-400'
-            }`}
-          >
-            {STOCK_INFO[symbol].name}
-          </button>
-        ))}
+        {PREDICTABLE_SYMBOLS.map(symbol => {
+          const closedToday = weekend && WEEKEND_CLOSED.has(symbol);
+          return (
+            <button
+              key={symbol}
+              type="button"
+              onClick={() => !closedToday && toggleAsset(symbol)}
+              disabled={closedToday}
+              className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-colors ${
+                closedToday
+                  ? 'bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-slate-600 cursor-not-allowed'
+                  : selectedAssets.has(symbol)
+                    ? 'bg-blue-600 text-white border-blue-600 asset-selected-btn'
+                    : 'bg-white dark:bg-slate-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-slate-500 hover:border-blue-400'
+              }`}
+            >
+              {STOCK_INFO[symbol].name}{closedToday ? '（休場）' : ''}
+            </button>
+          );
+        })}
       </div>
 
       {/* 選択された銘柄の入力欄 */}

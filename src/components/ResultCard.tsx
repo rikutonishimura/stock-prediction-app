@@ -135,7 +135,10 @@ function SingleResult({
                 結果を確定
               </button>
             )}
-            {!onConfirm && (
+            {!onConfirm && currentChange === 0 && (
+              <div className="mt-2 text-sm text-amber-600 dark:text-amber-400 text-center">市場休場（確定不可）</div>
+            )}
+            {!onConfirm && currentChange !== 0 && (
               <div className="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">結果待ち</div>
             )}
           </>
@@ -297,7 +300,7 @@ export function ResultCard({ prediction, stockData, onUpdateResult, onEdit, onSa
                 currency={getCurrency(symbol)}
                 currentChange={stockData?.[symbol]?.changePercent}
                 onConfirm={
-                  p.actualChange === null && stockData?.[symbol]
+                  p.actualChange === null && stockData?.[symbol] && stockData[symbol].changePercent !== 0
                     ? () => handleConfirm(symbol)
                     : undefined
                 }
