@@ -106,3 +106,69 @@ create table if not exists news_analysis_cache (
 
 -- RLSを無効にする（サーバーサイドのみアクセス、service_role使用）
 -- alter table news_analysis_cache enable row level security;
+
+-- ===== 仮想投資ポイント機能 =====
+
+-- 10. ウォレット（ポイント残高）テーブル
+create table if not exists wallets (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users on delete cascade not null unique,
+  balance bigint not null default 0,
+  initial_grant_done boolean not null default false,
+  last_login_bonus_date date,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 11. 保有銘柄テーブル
+create table if not exists holdings (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users on delete cascade not null,
+  symbol text not null check (symbol in ('nikkei', 'sp500', 'gold', 'bitcoin')),
+  units numeric(20, 8) not null default 0,
+  avg_purchase_price numeric(20, 4) not null default 0,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  unique(user_id, symbol)
+);
+
+-- 12. ポイント取引履歴テーブル
+create table if not exists point_transactions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users on delete cascade not null,
+  type text not null check (type in ('initial', 'login_bonus', 'prediction_bonus', 'buy', 'sell')),
+  amount bigint not null,
+  symbol text,
+  description text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- RLS有効化
+alter table wallets enable row level security;
+alter table holdings enable row level security;
+alter table point_transactions enable row level security;
+
+-- wallets RLS
+create policy "Users can view own wallet"
+  on wallets for select using (auth.uid() = user_id);
+
+-- holdings RLS（ポートフォリオ公開のため全員が閲覧可能）
+create policy "Authenticated users can view all holdings"
+  on holdings for select using (auth.uid() is not null);
+create policy "Users can insert own holdings"
+  on holdings for insert with check (auth.uid() = user_id);
+create policy "Users can update own holdings"
+  on holdings for update using (auth.uid() = user_id);
+create policy "Users can delete own holdings"
+  on holdings for delete using (auth.uid() = user_id);
+
+-- point_transactions RLS
+create policy "Users can view own transactions"
+  on point_transactions for select using (auth.uid() = user_id);
+
+-- インデックス
+create index if not exists wallets_user_id_idx on wallets(user_id);
+create index if not exists holdings_user_id_idx on holdings(user_id);
+create index if not exists holdings_user_symbol_idx on holdings(user_id, symbol);
+create index if not exists point_transactions_user_id_idx on point_transactions(user_id);
+create index if not exists point_transactions_created_at_idx on point_transactions(created_at desc);

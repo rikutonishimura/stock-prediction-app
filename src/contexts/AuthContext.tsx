@@ -24,6 +24,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   updateProfile: (name: string) => Promise<{ error: string | null }>;
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
+  updatePassword: (password: string) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,6 +40,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let isMounted = true;
     let retryCount = 0;
     const maxRetries = 3;
+
+    // ウォレット付与API呼び出し（初回ボーナス + デイリーログインボーナス）
+    const grantWalletPoints = async () => {
+      try {
+        await fetch('/api/wallet/grant', { method: 'POST' });
+      } catch {
+        // サイレントフェイル（ポイント付与は重要だが認証フローをブロックしない）
+      }
+    };
 
     // プロフィールを取得（なければ自動作成）
     const fetchProfile = async (userId: string) => {
@@ -65,12 +76,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (isMounted) {
             setProfile(newProfile);
           }
+          grantWalletPoints();
           return;
         }
 
         if (isMounted) {
           setProfile(data);
         }
+        grantWalletPoints();
       } catch (error) {
         console.error('Failed to fetch profile:', error);
       }
@@ -217,8 +230,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null };
   };
 
+  // パスワードリセットメール送信
+  const resetPassword = async (email: string) => {
+    const supabase = createClient();
+    const redirectTo = `${window.location.origin}/reset-password`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    if (error) {
+      return { error: error.message };
+    }
+    return { error: null };
+  };
+
+  // パスワード更新（リセット後）
+  const updatePassword = async (password: string) => {
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      return { error: error.message };
+    }
+    return { error: null };
+  };
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut, updateProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut, updateProfile, resetPassword, updatePassword }}>
       {children}
     </AuthContext.Provider>
   );

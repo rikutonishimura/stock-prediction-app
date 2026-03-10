@@ -6,10 +6,11 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { RankingPanel, StockTicker, ThemeToggle, UserMenu } from '@/components';
+import { PointRankingPanel } from '@/components/PointRankingPanel';
 import { useStock } from '@/hooks/useStock';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -17,6 +18,7 @@ export default function RankingPage() {
   const { data: stockData } = useStock();
   const { user, profile, signOut, updateProfile, loading: authLoading } = useAuth();
   const router = useRouter();
+  const [rankingTab, setRankingTab] = useState<'prediction' | 'point'>('prediction');
 
   // 未ログイン時はログインページにリダイレクト
   useEffect(() => {
@@ -102,7 +104,22 @@ export default function RankingPage() {
       </div>
 
       <main className="w-full px-4 lg:px-8 py-8">
-        <RankingPanel />
+        {/* ランキング種別タブ */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setRankingTab('prediction')}
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${rankingTab === 'prediction' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700'}`}
+          >
+            予想精度ランキング
+          </button>
+          <button
+            onClick={() => setRankingTab('point')}
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${rankingTab === 'point' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700'}`}
+          >
+            ポイントランキング
+          </button>
+        </div>
+        {rankingTab === 'prediction' ? <RankingPanel /> : <PointRankingPanel />}
       </main>
 
       {/* フッター */}

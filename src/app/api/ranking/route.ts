@@ -133,13 +133,20 @@ async function autoConfirmAllPending() {
     })
   );
 
+  const PREDICTION_BONUS = 1000;
+
   for (const pred of eligible) {
     const updates: Record<string, unknown> = { confirmed_at: new Date().toISOString() };
+    let correctCount = 0;
 
     for (const key of ASSET_KEYS) {
       if (pred[`${key}_predicted_change`] != null && changePercents[key] != null) {
         updates[`${key}_actual_change`] = changePercents[key];
         updates[`${key}_deviation`] = Math.abs(Number(pred[`${key}_predicted_change`]) - changePercents[key]!);
+        // 方向正解チェック
+        const predicted = Number(pred[`${key}_predicted_change`]);
+        const actual = changePercents[key]!;
+        if ((predicted >= 0) === (actual >= 0)) correctCount++;
       }
     }
 
@@ -150,6 +157,26 @@ async function autoConfirmAllPending() {
 
     if (updateError) {
       console.error(`[autoConfirmAll] 確定エラー (${pred.id}):`, updateError);
+      continue;
+    }
+
+    // 予想精度ボーナス付与
+    if (correctCount > 0) {
+      const bonusAmount = correctCount * PREDICTION_BONUS;
+      const { data: wallet } = await supabase
+        .from('wallets').select('balance').eq('user_id', pred.user_id).single();
+      if (wallet) {
+        await supabase.from('wallets').update({
+          balance: wallet.balance + bonusAmount,
+          updated_at: new Date().toISOString(),
+        }).eq('user_id', pred.user_id);
+        await supabase.from('point_transactions').insert({
+          user_id: pred.user_id,
+          type: 'prediction_bonus',
+          amount: bonusAmount,
+          description: `予想精度ボーナス（${correctCount}銘柄正解 × ${PREDICTION_BONUS}pt）`,
+        });
+      }
     }
   }
 }

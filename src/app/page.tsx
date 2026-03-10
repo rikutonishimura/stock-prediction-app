@@ -113,6 +113,12 @@ export default function Home() {
                   >
                     ランキング
                   </Link>
+                  <Link
+                    href="/portfolio"
+                    className="text-gray-600 dark:text-gray-300 font-medium hover:text-gray-800 dark:hover:text-white"
+                  >
+                    ポートフォリオ
+                  </Link>
                 </nav>
                 <ThemeToggle />
                 {authLoading ? (
